@@ -21,6 +21,7 @@ public:
     Square(Point upperLeft);
     Point upperLeftCorner, lowerLeftCorner;
     void draw_rectangle(Mat src);
+    float squareSize;
 };
 
 #endif /* Square_hpp */

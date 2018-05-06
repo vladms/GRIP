@@ -40,11 +40,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291215.043841"
+            timestampString = "547291942.938031"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "134"
-            endingLineNumber = "134"
+            startingLineNumber = "129"
+            endingLineNumber = "129"
             landmarkName = "computeMedianHandColor()"
             landmarkType = "9">
          </BreakpointContent>
@@ -56,11 +56,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291215.0446"
+            timestampString = "547291942.938099"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "203"
-            endingLineNumber = "203"
+            startingLineNumber = "160"
+            endingLineNumber = "160"
             landmarkName = "performBinarization()"
             landmarkType = "9">
          </BreakpointContent>
@@ -72,11 +72,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291215.045244"
+            timestampString = "547291942.938149"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "204"
-            endingLineNumber = "204"
+            startingLineNumber = "161"
+            endingLineNumber = "161"
             landmarkName = "performBinarization()"
             landmarkType = "9">
          </BreakpointContent>
@@ -88,11 +88,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291215.04571"
+            timestampString = "547291942.938195"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "237"
-            endingLineNumber = "237"
+            startingLineNumber = "171"
+            endingLineNumber = "171"
             landmarkName = "performBinarization()"
             landmarkType = "9">
          </BreakpointContent>

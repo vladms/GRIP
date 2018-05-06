@@ -8,8 +8,8 @@
 
 #include "Square.hpp"
 
-#define BORDER_THICKNESS 2
-#define SQUARE_SIZE 18
+#define BORDER_THICKNESS 2.0
+#define SQUARE_SIZE 18.0
 
 Scalar squareColor = Scalar(0, 255, 0);
 
@@ -27,6 +27,11 @@ Square::Square(Point upperLeft) {
 void Square::draw_rectangle(Mat src){
     rectangle(src,upperLeftCorner,lowerLeftCorner,squareColor,BORDER_THICKNESS);
 }
+
+float squareSize() {
+    return SQUARE_SIZE;
+}
+
 
 
 

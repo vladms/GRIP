@@ -36,7 +36,6 @@ void findHand(Mat src);
 
 vector <Square> squarePoints;
 vector <Vec3b> medianColor;
-vector <Scalar> standardDeviation;
 Scalar standardDeviationScalar;
 
 int currentSample = 0;
@@ -89,9 +88,6 @@ void computeMedianHandColor() {
     double bColor = 0.0;
     int count = 0;
     cvtColor(roiFrame, roiFrame, CV_BGR2HLS);
-
-    float width = ROISize.width;
-    float height = ROISize.height;
    
     standardDeviationScalar = Scalar(0.0, 0.0, 0.0);
     for (int squareIndex = 0; squareIndex < squarePoints.size(); ++squareIndex) {
@@ -99,13 +95,12 @@ void computeMedianHandColor() {
         Point upperLeftCorner = currentSquare.upperLeftCorner;
         Point lowerLeftCorner = currentSquare.lowerLeftCorner;
         
-        Rect sqaureRect = Rect(upperLeftCorner.x, upperLeftCorner.y, 18.0, 18.0);
+        Rect sqaureRect = Rect(upperLeftCorner.x, upperLeftCorner.y, currentSquare.squareSize, currentSquare.squareSize);
         Mat squareImage = roiFrame(sqaureRect);
         
         Scalar mean,dev;
         
         meanStdDev(squareImage, mean, dev);
-        standardDeviation.push_back(dev);
         standardDeviationScalar[0] += mean[0];
         standardDeviationScalar[1] += mean[1];
         standardDeviationScalar[2] += mean[2];
@@ -135,7 +130,6 @@ void computeMedianHandColor() {
     medianColor.push_back(hls);
     
     cvtColor(roiFrame, roiFrame, CV_HLS2BGR);
-
 }
 
 void createROI(Mat frame) {
@@ -143,50 +137,15 @@ void createROI(Mat frame) {
     Rect ROI = Rect(ROISize.width, 0.0, ROISize.width, ROISize.height);
     roiFrame = frame(ROI);
     
-    
     coloredRoiFrame = frame(ROI).clone();
-    imshow("coloredRoiFrame1", coloredRoiFrame);
+    imshow("coloredRoiFrame", coloredRoiFrame);
 }
 
 
-
-int c_lower[NR_OF_SAMPLES][3];
-int c_upper[NR_OF_SAMPLES][3];
 void initTrackbars() {
     //    namedWindow(TRACKBARS_NAME, CV_WINDOW_FREERATIO);
     //    createTrackbar("BinaryOffsetValue", TRACKBARS_NAME, &binarizationOffsetValue, 100);
    
-}
-void normalizeColors(){
-    for(int i=0;i<NR_OF_SAMPLES;i++){
-        c_lower[i][0] = 12;
-        c_upper[i][0] = 7;
-        c_lower[i][1] = 30;
-        c_upper[i][1] = 40;
-        c_lower[i][2] = 80;
-        c_upper[i][2] = 80;
-    }
-    for(int i=1;i<NR_OF_SAMPLES;i++){
-        for(int j=0;j<3;j++){
-            c_lower[i][j]=c_lower[0][j];
-            c_upper[i][j]=c_upper[0][j];
-        }
-    }
-    for(int i=0;i<NR_OF_SAMPLES;i++){
-        if((medianColor[i][0]-c_lower[i][0]) <0){
-            c_lower[i][0] = medianColor[i][0] ;
-        }if((medianColor[i][1]-c_lower[i][1]) <0){
-            c_lower[i][1] = medianColor[i][1] ;
-        }if((medianColor[i][2]-c_lower[i][2]) <0){
-            c_lower[i][2] = medianColor[i][2] ;
-        }if((medianColor[i][0]+c_upper[i][0]) >255){
-            c_upper[i][0] = 255-medianColor[i][0] ;
-        }if((medianColor[i][1]+c_upper[i][1]) >255){
-            c_upper[i][1] = 255-medianColor[i][1] ;
-        }if((medianColor[i][2]+c_upper[i][2]) >255){
-            c_upper[i][2] = 255-medianColor[i][2] ;
-        }
-    }
 }
 
 void performBinarization() {
@@ -197,20 +156,9 @@ void performBinarization() {
     imshow("HLS", roiFrame);
     vector<Mat> bwFrameList;
     
-    normalizeColors();
-    
     float k = 0.55;
     for (int i = 0; i < NR_OF_SAMPLES;++i) {
 
-        lowerBoundColor[0] = medianColor[i][0] - c_lower[i][0];
-        lowerBoundColor[1] = medianColor[i][1] - c_lower[i][1];
-        lowerBoundColor[2] = medianColor[i][2] - c_lower[i][2];
-        lowerBoundColor[2] = medianColor[i][2] - c_lower[i][2];
-        
-        upperBoundColor[0] = medianColor[i][0] + c_upper[i][0];
-        upperBoundColor[1] = medianColor[i][1] + c_upper[i][1];
-        upperBoundColor[2] = medianColor[i][2] + c_upper[i][2];
-        
 
         lowerBoundColor[0] = medianColor[i][0] - k*standardDeviationScalar[0];
         lowerBoundColor[1] = medianColor[i][1] - k*standardDeviationScalar[1];
@@ -219,21 +167,6 @@ void performBinarization() {
         upperBoundColor[0] = medianColor[i][0] + k*standardDeviationScalar[0];
         upperBoundColor[1] = medianColor[i][1] + k*standardDeviationScalar[1];
         upperBoundColor[2] = medianColor[i][2] + k*standardDeviationScalar[2];
-//
-//        lowerBoundColor[0] = medianColor[i][0] - k*standardDeviation[i][0];
-//        lowerBoundColor[1] = medianColor[i][1] - k*standardDeviation[i][1];
-//        lowerBoundColor[2] = medianColor[i][2] - k*standardDeviation[i][2];
-//
-//        upperBoundColor[0] = medianColor[i][0] + k*standardDeviation[i][0];
-//        upperBoundColor[1] = medianColor[i][1] + k*standardDeviation[i][1];
-//        upperBoundColor[2] = medianColor[i][2] + k*standardDeviation[i][2];
-//        upperBoundColor[2] = medianColor[i][2];
-
-        
-        
-//        printScalar(lowerBoundColor, "LowerBound COlor");
-//        printScalar(upperBoundColor, "upperBoundColor COlor");
-//        printScalar(medianColor[i], "median COlor");
 
         Mat bwFrame;
         inRange(roiFrame.clone(), lowerBoundColor, upperBoundColor, bwFrame);
@@ -283,9 +216,11 @@ Mat removeNoiseOutside(Mat workingImage, Rect rect) {
     //Set the image to 0 in places where the mask is 1
     inverseFill.setTo(cv::Scalar(0), inverseMask);
     
+  
     workingHandImage = roiFrame(rect);
+    imshow("removeNoiseOutside", workingHandImage);
     return workingHandImage;
-    //    imshow("smth", workingHandImage);
+
 }
 
 vector <Point> fingerTips;
@@ -314,7 +249,6 @@ void getFingerTips(Mat m, vector<Vec4i>  defects, vector<Point> biggestContour, 
     fingerTips.clear();
     int i=0;
     d = defects.begin();
-    //    printf("defects.size: %lu\n", defects.size());
     while( defects.size() > i && d!=defects.end() ) {
         int startIdx = defects[i].val[0];
         Point ptStart(biggestContour[startIdx]);
@@ -472,8 +406,6 @@ void computeHandImage() {
         Mat drawing = workingImage.clone();
         
         Scalar color = Scalar( 255.0, 25.0, 10.0);
-        Scalar color2 = Scalar( 0.0, 25.0, 10.0);
-        
         
         vector<vector<Point>> vector1;
         vector1.push_back(hullPoints);
@@ -504,13 +436,12 @@ void computeHandImage() {
         Mat defectsImage = coloredRoiFrame.clone();
         Mat defectsImage2 = coloredRoiFrame.clone();
         
-        
+        /*
         vector<Vec4i>  defects;
         if (biggestContour.size() > 3) {
             convexityDefects(biggestContour, hullI, defects);
             
-            
-            
+
             vector<Vec4i> goodDefects;
             int tolerance =  rect.height / 5;
             
@@ -673,9 +604,9 @@ void computeHandImage() {
                 drawFingerTips(workingImage);
             }
         }
+         */
     }
-    findHand(workingImage);
-    
+//    findHand(workingImage);
     roiFrame = workingImage;
 }
 
