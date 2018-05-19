@@ -12,7 +12,7 @@
 #include <math.h>
 #include <queue>
 #include <random>
-#include "Project.hpp"
+#include "Project2.hpp"
 #include <string>
 #include "dibfft.h"
 
@@ -127,28 +127,28 @@ void setupStartMenu() {
 
 
 
-void displayHistogramArray(int *histogram, String windowName){
-    int maximaOfHistogram = 0;
-    
-    for (int i = 0; i <= 255; ++i){
-        if (histogram[i] > maximaOfHistogram){
-            maximaOfHistogram = histogram[i];
-        }
-    }
-    
-    Mat histogramImage = Mat(255, 255, CV_8UC3, CV_RGB(0, 0, 0));
-    for (int i = 0; i <= 255; ++i){
-        float aux = (float)((float)histogram[i] / maximaOfHistogram);
-        histogram[i] = (int)(aux * 255.0);
-    }
-    for (int i = 0; i <= 255; ++i){
-        Point p1 = Point(i, 255);
-        Point p2 = Point(i, 255 - histogram[i]);
-        
-        line(histogramImage, p1, p2, CV_RGB(255, 0, 0));
-    }
-    imshow(windowName, histogramImage);
-}
+//void displayHistogramArray(int *histogram, String windowName){
+//    int maximaOfHistogram = 0;
+//    
+//    for (int i = 0; i <= 255; ++i){
+//        if (histogram[i] > maximaOfHistogram){
+//            maximaOfHistogram = histogram[i];
+//        }
+//    }
+//    
+//    Mat histogramImage = Mat(255, 255, CV_8UC3, CV_RGB(0, 0, 0));
+//    for (int i = 0; i <= 255; ++i){
+//        float aux = (float)((float)histogram[i] / maximaOfHistogram);
+//        histogram[i] = (int)(aux * 255.0);
+//    }
+//    for (int i = 0; i <= 255; ++i){
+//        Point p1 = Point(i, 255);
+//        Point p2 = Point(i, 255 - histogram[i]);
+//        
+//        line(histogramImage, p1, p2, CV_RGB(255, 0, 0));
+//    }
+//    imshow(windowName, histogramImage);
+//}
 
 int main(){
     
@@ -176,8 +176,8 @@ int main(){
     //
     //    }
     //    while (op!=0);
-        setupStartMenu();
-//        startCamera();
+//        setupStartMenu();
+        startCamera();
 //    findHand();
     
     

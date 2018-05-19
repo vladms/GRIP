@@ -1,13 +1,15 @@
 //
-//  Project.hpp
-//  IP2017
+//  Project2.hpp
+//  LicenseProject
 //
-//  Created by Vlad Bonta on 10/04/2017.
-//  Copyright © 2017 Vlad Bonta. All rights reserved.
+//  Created by Vlad Bonta on 15/05/2018.
+//  Copyright © 2018 Vlad Bonta. All rights reserved.
 //
 
-#ifndef Project_hpp
-#define Project_hpp
+#ifndef Project2_hpp
+#define Project2_hpp
+
+#include <stdio.h>
 
 #include <stdio.h>
 
@@ -32,12 +34,14 @@ using namespace std;
 
 
 
-//
-//class SPoint{
-//public:
-//    int x, y;
-//    int superPixelId;
-//};
-//
-//void startCamera();
-//
+
+class SPoint{
+public:
+    int x, y;
+    int superPixelId;
+};
+
+void startCamera();
+
+
+

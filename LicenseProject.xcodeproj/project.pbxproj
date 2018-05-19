@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		22D4A235205D0B3900268F08 /* Project.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22D49D77205D0B3900268F08 /* Project.cpp */; };
+		22C719E820AB800F00D33CEF /* Project2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C719E620AB800F00D33CEF /* Project2.cpp */; };
 		22D4A236205D0B3900268F08 /* dibfft.lib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D49DE5205D0B3900268F08 /* dibfft.lib */; };
 		22D4A237205D0B3900268F08 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22D4A234205D0B3900268F08 /* main.cpp */; };
 		22D4A23A205D157E00268F08 /* Square.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22D4A238205D157E00268F08 /* Square.cpp */; };
@@ -31,6 +31,8 @@
 		22808887207F2FC700F7E5D2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		22A6CC632084BDEF00324F05 /* hand.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hand.png; sourceTree = "<group>"; };
 		22A6CC642084BE2D00324F05 /* hand2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hand2.png; sourceTree = "<group>"; };
+		22C719E620AB800F00D33CEF /* Project2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Project2.cpp; sourceTree = "<group>"; };
+		22C719E720AB800F00D33CEF /* Project2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Project2.hpp; sourceTree = "<group>"; };
 		22D49D76205D0B3900268F08 /* dibfft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dibfft.h; sourceTree = "<group>"; };
 		22D49D77205D0B3900268F08 /* Project.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Project.cpp; sourceTree = "<group>"; };
 		22D49DE4205D0B3900268F08 /* Project.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Project.hpp; sourceTree = "<group>"; };
@@ -91,6 +93,8 @@
 				22D49DE7205D0B3900268F08 /* opencv-3.2.0 */,
 				22D4A238205D157E00268F08 /* Square.cpp */,
 				22D4A239205D157E00268F08 /* Square.hpp */,
+				22C719E620AB800F00D33CEF /* Project2.cpp */,
+				22C719E720AB800F00D33CEF /* Project2.hpp */,
 			);
 			path = LicenseProject;
 			sourceTree = "<group>";
@@ -8874,7 +8878,7 @@
 			files = (
 				22D4A237205D0B3900268F08 /* main.cpp in Sources */,
 				22D4A23A205D157E00268F08 /* Square.cpp in Sources */,
-				22D4A235205D0B3900268F08 /* Project.cpp in Sources */,
+				22C719E820AB800F00D33CEF /* Project2.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

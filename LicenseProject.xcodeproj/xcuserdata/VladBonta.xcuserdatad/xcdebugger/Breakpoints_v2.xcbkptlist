@@ -16,16 +16,6 @@
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.ExceptionBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            scope = "0"
-            stopOnStyle = "0">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SwiftErrorBreakpoint">
          <BreakpointContent
             shouldBeEnabled = "Yes"
@@ -39,13 +29,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291942.938031"
+            filePath = "LicenseProject/Project2.cpp"
+            timestampString = "548436149.936003"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "129"
-            endingLineNumber = "129"
-            landmarkName = "computeMedianHandColor()"
+            startingLineNumber = "890"
+            endingLineNumber = "890"
+            landmarkName = "findCentroid(Mat image, bool rightHand)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -55,13 +45,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291942.938099"
+            filePath = "LicenseProject/Project2.cpp"
+            timestampString = "548436149.936451"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "160"
-            endingLineNumber = "160"
-            landmarkName = "performBinarization()"
+            startingLineNumber = "1232"
+            endingLineNumber = "1232"
+            landmarkName = "startCamera()"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -71,29 +61,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291942.938149"
+            filePath = "LicenseProject/Project2.cpp"
+            timestampString = "548436149.936762"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "161"
-            endingLineNumber = "161"
-            landmarkName = "performBinarization()"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "LicenseProject/Project.cpp"
-            timestampString = "547291942.938195"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "171"
-            endingLineNumber = "171"
-            landmarkName = "performBinarization()"
+            startingLineNumber = "894"
+            endingLineNumber = "894"
+            landmarkName = "findCentroid(Mat image, bool rightHand)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

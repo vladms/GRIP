@@ -9,7 +9,15 @@
 #include "Project.hpp"
 #include "Square.hpp"
 
-#define NR_OF_SAMPLES 10
+#define COLORSPACE_TO CV_BGR2HSV
+#define COLORSPACE_ORIG CV_HSV2BGR
+
+//#define COLORSPACE_TO CV_BGR2HLS
+//#define COLORSPACE_ORIG CV_HLS2BGR
+
+//#define COLORSPACE_TO CV_BGR2YCrCb
+//#define COLORSPACE_ORIG CV_YCrCb2BGR
+#define NR_OF_SAMPLES 5
 using namespace cv;
 using namespace std;
 
@@ -28,10 +36,14 @@ string TRACKBARS_NAME = "trackbars";
 Size ROISize;
 Size capS;
 Mat roiFrame;
+Mat hue;
+Mat sat;
 Mat coloredRoiFrame;
 Mat distanceTranformImage;
+Rect handDetectedRect;
 void solveHandDetection(Mat img);
 void findHand(Mat src);
+Point handDetectedCenterPoint;
 #define PI 3.14159
 
 vector <Square> squarePoints;
@@ -47,6 +59,7 @@ string intToString(int number);
 void printTextOnImage(Mat src, string text){
     rectangle(src, Point(0.0, 0.0), Point(capS.width / 2.0, 30.0), Scalar(255.0, 255.0, 255.0), -1);
     putText(src,text,Point(0.0, 20.0),1, 1.2f,Scalar(0.0, 0.0, 0.0),2);
+    
 }
 
 void placeSquares() {
@@ -87,27 +100,27 @@ void computeMedianHandColor() {
     double gColor = 0.0;
     double bColor = 0.0;
     int count = 0;
-    cvtColor(roiFrame, roiFrame, CV_BGR2HLS);
-   
+    cvtColor(roiFrame, roiFrame, COLORSPACE_TO);
+    
     standardDeviationScalar = Scalar(0.0, 0.0, 0.0);
     for (int squareIndex = 0; squareIndex < squarePoints.size(); ++squareIndex) {
         Square currentSquare = squarePoints[squareIndex];
         Point upperLeftCorner = currentSquare.upperLeftCorner;
         Point lowerLeftCorner = currentSquare.lowerLeftCorner;
         
-        Rect sqaureRect = Rect(upperLeftCorner.x, upperLeftCorner.y, currentSquare.squareSize, currentSquare.squareSize);
+        Rect sqaureRect = Rect(upperLeftCorner.x, upperLeftCorner.y, 18.0, 18.0);
         Mat squareImage = roiFrame(sqaureRect);
         
         Scalar mean,dev;
         
         meanStdDev(squareImage, mean, dev);
-        standardDeviationScalar[0] += mean[0];
-        standardDeviationScalar[1] += mean[1];
-        standardDeviationScalar[2] += mean[2];
+//        standardDeviationScalar[0] += mean[0];
+//        standardDeviationScalar[1] += mean[1];
+//        standardDeviationScalar[2] += mean[2];
         
-//        standardDeviationScalar[0] += dev[0];
-//        standardDeviationScalar[1] += dev[1];
-//        standardDeviationScalar[2] += dev[2];
+                standardDeviationScalar[0] += dev[0];
+                standardDeviationScalar[1] += dev[1];
+                standardDeviationScalar[2] += dev[2];
         for (int i = upperLeftCorner.x; i < lowerLeftCorner.x; ++i) {
             for (int j = upperLeftCorner.y; j < lowerLeftCorner.y; ++j) {
                 Vec3b colour = roiFrame.at<Vec3b>(Point(i, j));
@@ -129,7 +142,7 @@ void computeMedianHandColor() {
     Vec3b hls = Vec3b(rColor, gColor, bColor);
     medianColor.push_back(hls);
     
-    cvtColor(roiFrame, roiFrame, CV_HLS2BGR);
+    cvtColor(roiFrame, roiFrame, COLORSPACE_ORIG);
 }
 
 void createROI(Mat frame) {
@@ -145,34 +158,164 @@ void createROI(Mat frame) {
 void initTrackbars() {
     //    namedWindow(TRACKBARS_NAME, CV_WINDOW_FREERATIO);
     //    createTrackbar("BinaryOffsetValue", TRACKBARS_NAME, &binarizationOffsetValue, 100);
-   
+    
 }
 
 void performBinarization() {
     Scalar lowerBoundColor = Scalar(0.0, 0.0, 0.0);
     Scalar upperBoundColor = Scalar(0.0, 0.0, 0.0);
     
-    cvtColor(roiFrame, roiFrame, CV_BGR2HLS);
-    imshow("HLS", roiFrame);
+    cvtColor(roiFrame, roiFrame, COLORSPACE_TO);
+    imshow("HSV", roiFrame);
+    
+    
+    
+    
+    hue = Mat(roiFrame.size(), CV_8U);
+    
+    mixChannels(roiFrame, hue, {0, 0});
+    imshow("hue", hue);
+    
+    sat = Mat(roiFrame.size(), CV_8U);
+    
+    mixChannels(roiFrame, sat, {1, 0});
+    imshow("sat", sat);
+    
+    
+    Mat value = Mat(roiFrame.size(), CV_8U);
+    
+    mixChannels(roiFrame, value, {2, 0});
+
+//    imshow("value", value);
+
+//    Mat otsuMat;
+//    threshold(hue, otsuMat, 0, 255, CV_THRESH_OTSU + CV_THRESH_BINARY);
+//
+//    imshow("otsuMat", otsuMat);
+    
+    
+//    Mat hueSat = Mat(roiFrame.size(), CV_8UC3);
+//
+//    mixChannels(roiFrame, hueSat, {0, 0});
+//    mixChannels(roiFrame, hueSat, {1, 1});
+//
+//    mixChannels(roiFrame, Mat(hueSat.rows, hueSat.cols, CV_8U, Scalar(0,0,0)), {2, 2});
+//    imshow("hueSat", hueSat);
+    
+    
     vector<Mat> bwFrameList;
     
-    float k = 0.55;
+    float k = 2.2;
     for (int i = 0; i < NR_OF_SAMPLES;++i) {
-
-
         lowerBoundColor[0] = medianColor[i][0] - k*standardDeviationScalar[0];
         lowerBoundColor[1] = medianColor[i][1] - k*standardDeviationScalar[1];
         lowerBoundColor[2] = medianColor[i][2] - k*standardDeviationScalar[2];
-
+//        lowerBoundColor[2] = medianColor[i][2] - 50.0;
+//        lowerBoundColor[2] = 80.0;
+        lowerBoundColor[2] = 0.0;
+        
         upperBoundColor[0] = medianColor[i][0] + k*standardDeviationScalar[0];
         upperBoundColor[1] = medianColor[i][1] + k*standardDeviationScalar[1];
         upperBoundColor[2] = medianColor[i][2] + k*standardDeviationScalar[2];
-
+        upperBoundColor[2] = 255.0;
+//        upperBoundColor[2] = medianColor[i][2] + 50.0;
         Mat bwFrame;
         inRange(roiFrame.clone(), lowerBoundColor, upperBoundColor, bwFrame);
         bwFrameList.push_back(bwFrame);
     }
+    Mat hueSegmented;
+    inRange(hue.clone(), lowerBoundColor[0], upperBoundColor[0], hueSegmented);
+//        threshold(hue.clone(), hueSegmented, lowerBoundColor[0], upperBoundColor[0], CV_THRESH_OTSU + CV_THRESH_BINARY);
 
+    Mat satSegmented;
+    inRange(sat.clone(), lowerBoundColor[1], upperBoundColor[1], satSegmented);
+//    threshold(sat.clone(), satSegmented, lowerBoundColor[1], upperBoundColor[1], CV_THRESH_OTSU + CV_THRESH_BINARY);
+
+    
+    Mat valueSegmented;
+    inRange(value.clone(), lowerBoundColor[2], upperBoundColor[2], valueSegmented);
+//    threshold(value.clone(), ssatSegmented, lowerBoundColor[2], upperBoundColor[2], CV_THRESH_OTSU + CV_THRESH_BINARY);
+//
+//    imshow("huesegmented", hueSegmented);
+//    imshow("satsegmented", satSegmented);
+//    imshow("valuesegmented", valueSegmented);
+    Mat_<float> kernel(5,5);
+    kernel <<   1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1;
+//    kernel <<   0, 0, 1, 0, 0,
+//    1, 1, 1, 1, 1,
+//    1, 1, 1, 1, 1,
+//    1, 1, 1, 1, 1,
+//    0, 0, 1, 0, 0;
+    
+//    erode(satSegmented, satSegmented, kernel);
+//    dilate(satSegmented, satSegmented, kernel);
+//    satSegmented = hueSegmented;
+//    morphologyEx(satSegmented, satSegmented, MORPH_OPEN, kernel);
+//
+//    morphologyEx(satSegmented, satSegmented, MORPH_CLOSE, kernel);
+//        dilate(satSegmented, satSegmented, kernel);
+//        dilate(satSegmented, satSegmented, kernel);
+//    morphologyEx(satSegmented, satSegmented, MORPH_OPEN, kernel);
+//
+//    morphologyEx(satSegmented, satSegmented, MORPH_CLOSE, kernel);
+//
+//    morphologyEx(satSegmented, satSegmented, MORPH_OPEN, kernel);
+//
+//    morphologyEx(satSegmented, satSegmented, MORPH_CLOSE, kernel);
+
+//    imshow("satsegmentedAfter morphEx", satSegmented);
+
+    
+
+//    threshold(hue.clone(), hueSegmented, lowerBoundColor[0], upperBoundColor[0], CV_THRESH_OTSU + CV_THRESH_BINARY);
+//    threshold(sat.clone(), satSegmented, lowerBoundColor[1], upperBoundColor[1], CV_THRESH_OTSU + CV_THRESH_BINARY);
+//    threshold(ssat.clone(), ssatSegmented, lowerBoundColor[1], upperBoundColor[1], CV_THRESH_OTSU + CV_THRESH_BINARY);
+//    imshow("huesegmented2", hueSegmented);
+//    imshow("satsegmented2", satSegmented);
+//    imshow("ssatsegmented2", ssatSegmented);
+
+    Mat hueANDSat;
+    bitwise_and(satSegmented, hueSegmented, hueANDSat);
+    dilate(hueANDSat, hueANDSat, kernel);
+
+    morphologyEx(hueANDSat, hueANDSat, MORPH_OPEN, kernel);
+//
+//    morphologyEx(hueANDSat, hueANDSat, MORPH_CLOSE, kernel);
+
+//    imshow("hueANDSat", hueANDSat);
+
+//    bitwise_and(hueANDSat, satSegmented, hueANDSat);
+    imshow("ALLLTHREE", hueANDSat);
+
+    
+    Mat empty_image = Mat(hue.rows, hue.cols, CV_8U, Scalar(0,0,0));
+
+
+    Mat hueAndSat;
+    vector<Mat> channels;
+    channels.push_back(hue);
+    channels.push_back(valueSegmented);
+    channels.push_back(empty_image);
+
+    merge(channels, hueAndSat);
+    
+    upperBoundColor[2] = 0.0;
+    lowerBoundColor[2] = 0.0;
+    inRange(hueAndSat.clone(), lowerBoundColor, upperBoundColor, hueAndSat);
+
+
+//    imshow("hueSatSegmented1", hueAndSat);
+
+//    Mat hueSatSegmented;
+//
+//    inRange(hueAndSat.clone(), lowerBoundColor, upperBoundColor, hueSatSegmented);
+//    imshow("hueSatSegmented2", hueSatSegmented);
+    
+    
     finalBWFrame = bwFrameList[0];
     
     for (int i = 1; i < NR_OF_SAMPLES;++i) {
@@ -180,8 +323,12 @@ void performBinarization() {
     }
     
     medianBlur(finalBWFrame, roiFrame, 7);
-    imshow("finalBWFrame", roiFrame);
+    
+//    medianBlur(satSegmented, roiFrame, 1);
+    medianBlur(hueANDSat, roiFrame, 1);
 
+    imshow("finalBWFrame", roiFrame);
+    
 }
 
 int findBiggestContour(vector<vector<Point> > contours) {
@@ -216,11 +363,11 @@ Mat removeNoiseOutside(Mat workingImage, Rect rect) {
     //Set the image to 0 in places where the mask is 1
     inverseFill.setTo(cv::Scalar(0), inverseMask);
     
-  
+    
     workingHandImage = roiFrame(rect);
-    imshow("removeNoiseOutside", workingHandImage);
+//    imshow("removeNoiseOutside", workingHandImage);
     return workingHandImage;
-
+    
 }
 
 vector <Point> fingerTips;
@@ -350,9 +497,138 @@ float innerAngle(float px1, float py1, float px2, float py2, float cx1, float cy
     return A;
 }
 
+void searchForDTCenter(Mat image) {
+    handDetectedCenterPoint = Point(0, 0);
+    int nrOfMaxPoints = 0;
+    float maximum = -1;
+
+    
+    for (int i = handDetectedRect.x; i < handDetectedRect.x + handDetectedRect.width; ++i) {
+        for (int j = handDetectedRect.y; j < handDetectedRect.y + handDetectedRect.height; ++j) {
+            float colour = image.at<float>(Point(i, j));
+            if (colour > 0) {
+                if (colour > maximum) {
+                    maximum = colour;
+                    nrOfMaxPoints = 1;
+                    handDetectedCenterPoint = Point(i, j);
+                } else if (colour == maximum) {
+                    nrOfMaxPoints++;
+                    handDetectedCenterPoint.x += i;
+                    handDetectedCenterPoint.y += j;
+                }
+            }
+        }
+    }
+
+    if (nrOfMaxPoints > 0) {
+        handDetectedCenterPoint.x /= nrOfMaxPoints;
+        handDetectedCenterPoint.y /= nrOfMaxPoints;
+    }
+
+    circle(image, handDetectedCenterPoint, 5, Scalar(100,255,100), 3);
+    Mat colorImage = coloredRoiFrame.clone();
+    circle(colorImage, handDetectedCenterPoint, 5, Scalar(100,255,100), 3);
+    imshow("DT center", colorImage);
+}
+
+int displayHistogramArray(int* histogram, String windowName, int length){
+    int height = 100;
+    Mat histogramImage = Mat(height, length, CV_8UC3, CV_RGB(0, 0, 0));
+    bool started = false;
+    int nrOfContinuousHand = 0;
+    int nrOfFingers = 0;
+
+
+    for (int i = 0; i < length; ++i){
+        int limit = height / 2.0;
+        if (i < length - 1) {
+            if (started) {
+                nrOfContinuousHand++;
+            }
+            if (histogram[i] != histogram[i + 1] && histogram[i + 1] == 0) {
+                started = true;
+            }
+            if (histogram[i] != histogram[i + 1] && histogram[i + 1] != 0) {
+                started = false;
+//                cout<<"nrOfContinuousHand: " << nrOfContinuousHand << "\n";
+                if (nrOfContinuousHand < 30.0 && nrOfContinuousHand > 0) {
+                    nrOfFingers++;
+                }
+                nrOfContinuousHand = 0;
+            }
+
+        }
+        if (histogram[i] == 0) {
+            limit = 1;
+        }
+        Point p1 = Point(i, height);
+        Point p2 = Point(i, height - limit);
+        
+        line(histogramImage, p1, p2, CV_RGB(255, 0, 0));
+    }
+    imshow(windowName, histogramImage);
+    return nrOfFingers;
+}
+
+int findNumberOfFingers(Mat image, int radius) {
+    Size axes (radius,radius);
+    vector<Point> pointsOnCircle;
+    
+    
+
+    
+    Mat circleImage = image.clone();
+    circle(circleImage, handDetectedCenterPoint, radius, Scalar(100,255,100), 1);
+    
+
+    
+    
+    ellipse2Poly(handDetectedCenterPoint, axes, 0, 0, 360, 1, pointsOnCircle);
+    int histogramArray[pointsOnCircle.size()];
+    for (int i = 0; i < pointsOnCircle.size(); ++i) {
+        
+        Point currentPoint = pointsOnCircle[i];
+        if (i == 0) {
+            circle(circleImage, currentPoint, 10, Scalar(100,255,100), 1);
+        }
+        if (i == 20) {
+            circle(circleImage, currentPoint, 20, Scalar(100,255,100), 1);
+        }
+
+        histogramArray[i] = -1.0;
+        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
+            int colour = image.at<uchar>(currentPoint);
+            histogramArray[i] = colour;
+        }
+    }
+    imshow("createdCircle", circleImage);
+
+return    displayHistogramArray(histogramArray, "histogramArray",(int)pointsOnCircle.size());
+//    int nrOfFingers = 0;
+//    for (int i = 0; i < pointsOnCircle.size() - 1; ++i) {
+//        if (histogramArray[i] != histogramArray[i + 1] && histogramArray[i + 1] != 0) {
+//            nrOfFingers++;
+//        }
+//    }
+    
+//    return nrOfFingers;
+}
+
+void findOuterCircle(Mat image) {
+    float width = handDetectedRect.width;
+    int radius = width / 2.0;
+    int maxRadius = radius;
+//    cout<< "nrOfFingers: ";
+    for (;radius <= maxRadius; ++radius) {
+        int nrOfFingers = findNumberOfFingers(image, radius);
+        cout<< " " << nrOfFingers << " ";
+    }
+    cout<< "\n";
+}
+
 void computeHandImage() {
     GaussianBlur(roiFrame, roiFrame, Size(0, 0), 2);
-
+    
     Mat workingImage = roiFrame.clone();
     
     vector<vector<Point> > contours;
@@ -366,35 +642,32 @@ void computeHandImage() {
     1, 1, 1, 1, 1,
     1, 1, 1, 1, 1,
     1, 1, 1, 1, 1;
-
+    
     
     morphologyEx(workingImage, workingImage, MORPH_OPEN, kernel);
-//    imshow("222", workingImage);
-        morphologyEx(workingImage, workingImage, MORPH_CLOSE, kernel);
-//    imshow("33", workingImage);
+    morphologyEx(workingImage, workingImage, MORPH_CLOSE, kernel);
     distanceTranformImage = workingImage.clone();
-
+    
     //find the biggest contour
     findContours(workingImage, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
     
-
+    
     int indexOfBiggestContour = findBiggestContour(contours);
     if (indexOfBiggestContour != -1) {
         vector<Point> biggestContour = contours[indexOfBiggestContour];
-        Rect rect = boundingRect(biggestContour);
-        rectangle(workingImage, Point(rect.x, rect.y), Point(rect.x + rect.width, rect.y + rect.height), Scalar(255.0, 255.0, 0));
-        rectangle(coloredRoiFrame, Point(rect.x, rect.y), Point(rect.x + rect.width, rect.y + rect.height), Scalar(255.0, 255.0, 0));
+        handDetectedRect = boundingRect(biggestContour);
+        rectangle(workingImage, Point(handDetectedRect.x, handDetectedRect.y), Point(handDetectedRect.x + handDetectedRect.width, handDetectedRect.y + handDetectedRect.height), Scalar(255.0, 255.0, 0));
+        rectangle(coloredRoiFrame, Point(handDetectedRect.x, handDetectedRect.y), Point(handDetectedRect.x + handDetectedRect.width, handDetectedRect.y + handDetectedRect.height), Scalar(255.0, 255.0, 0));
         
+        Mat workingImageWithoutNoise = removeNoiseOutside(workingImage, handDetectedRect);
+        //        imshow("image after removeNoiseOutside", workingImageWithoutNoise);
         
-        removeNoiseOutside(workingImage, rect);
-        imshow("image before DT", workingImage);
         Mat dist;
         distanceTransform(workingImage.clone(), dist, CV_DIST_L2, 3);
         
         // Normalize the distance image for range = {0.0, 1.0}
         // so we can visualize and threshold it
         normalize(dist, dist, 0, 1., NORM_MINMAX);
-//        imshow("Distance Transform Image", dist);
         
         vector<Point> hullPoints;
         vector<int> hullI;
@@ -414,257 +687,47 @@ void computeHandImage() {
         vector2.push_back(biggestContour);
         
         Mat filledContours = drawing.clone();
-//        drawContours(drawing, vector1, 0, color, 1);
-
+        //        drawContours(drawing, vector1, 0, color, 1);
+        
         drawContours(drawing, vector2, 0, color, 1, LINE_4);
         drawContours(filledContours, vector2, 0, color, -1);
-//        drawContours(coloredRoiFrame, vector1, 0, color, 1);
-//        drawContours(coloredRoiFrame, vector2, 0, color2, 1);
+        //        drawContours(coloredRoiFrame, vector1, 0, color, 1);
+        //        drawContours(coloredRoiFrame, vector2, 0, color2, 1);
         imshow("Contours", drawing);
         imshow("Filled Contours", filledContours);
-            erode(filledContours, filledContours, kernel);
+        erode(filledContours, filledContours, kernel);
         imshow("Filled Contours eroded", filledContours);
+        
+//        filledContours = filledContours(handDetectedRect);
+//        imshow("filledContours aci", filledContours);
 
+        Mat DTFilled;
+        distanceTransform(filledContours, DTFilled, CV_DIST_L2, 3);
+        normalize(DTFilled, DTFilled, 0, 1., NORM_MINMAX);
+        imshow("Distance transform filled", DTFilled);
+//        DTFilled = DTFilled(handDetectedRect);
+        imshow("imageRect", DTFilled);
         
-        Mat dist2;
-        distanceTransform(filledContours, dist2, CV_DIST_L1, 3);
-        // Normalize the distance image for range = {0.0, 1.0}
-        // so we can visualize and threshold it
-        normalize(dist2, dist2, 0, 1., NORM_MINMAX);
-        imshow("Distance transform filled", dist2);
+        searchForDTCenter(DTFilled);
+        findOuterCircle(filledContours);
         
-        Mat defectsImage = coloredRoiFrame.clone();
-        Mat defectsImage2 = coloredRoiFrame.clone();
-        
-        /*
-        vector<Vec4i>  defects;
-        if (biggestContour.size() > 3) {
-            convexityDefects(biggestContour, hullI, defects);
-            
-
-            vector<Vec4i> goodDefects;
-            int tolerance =  rect.height / 5;
-            
-            Point center = cv::Point(rect.x + rect.width / 2, rect.y + rect.height / 2);
-            
-            
-            
-            
-            
-            int j = 1;
-            for (int i = 0; i < defects.size() && j < defects.size(); i++, j++) {
-                int startIdx = defects[i].val[0];
-                Point ptStart(biggestContour[startIdx]);
-                
-                int endIdx = defects[i].val[1];
-                Point ptEnd(biggestContour[endIdx]);
-                
-                int farIdx = defects[i].val[2];
-                Point ptFar(biggestContour[farIdx]);
-                
-                int startIdx2 = defects[j].val[0];
-                Point ptStart2(biggestContour[startIdx2]);
-                
-                int endIdx2 = defects[j].val[1];
-                Point ptEnd2(biggestContour[endIdx2]);
-                
-                int farIdx2 = defects[j].val[2];
-                Point ptFar2(biggestContour[farIdx2]);
-                
-                float distanceBetweenMidleAndFarPoint = distanceP2P(ptStart, ptStart2);
-                float distanceBetweenMidleAndFarPoint2 = distanceP2P(ptEnd, ptEnd2);
-                if (distanceBetweenMidleAndFarPoint < rect.width / 6 && distanceBetweenMidleAndFarPoint2 < rect.width / 6) {
-                    
-                    //                    goodDefects.push_back(defects[i]);
-                }
-            }
-            
-            for (int i = 0; i < defects.size(); i++) {
-                for (int j = i + 1; j < defects.size(); j++) {
-                    int startIdx = defects[i].val[0];
-                    Point ptStart(biggestContour[startIdx]);
-                    
-                    int startIdx2 = defects[j].val[0];
-                    Point ptStart2(biggestContour[startIdx2]);
-                    
-                    float distance1 = distanceP2P(ptStart, center);
-                    float distance2 = distanceP2P(ptStart2, center);
-                    
-                    if (distance1 < distance2) {
-                        Vec4i aux = defects[i];
-                        defects[i] = defects[j];
-                        defects[j] = aux;
-                    }
-                }
-            }
-            for (int i = 0; i < 10 && i < defects.size(); i++) {
-                //                goodDefects.push_back(defects[i]);
-                
-            }
-            
-            for (int i = 0; i < defects.size(); i++) {
-                
-                int startIdx = defects[i].val[0];
-                Point ptStart(biggestContour[startIdx]);
-                
-                int endIdx = defects[i].val[1];
-                Point ptEnd(biggestContour[endIdx]);
-                
-                int farIdx = defects[i].val[2];
-                Point ptFar(biggestContour[farIdx]);
-                
-                
-                circle(defectsImage2,ptStart,5,CV_RGB(255,0,0),2,8);
-                
-                circle(defectsImage2,ptFar,5,CV_RGB(0,0,255),2,8);
-                
-                circle(defectsImage2,ptEnd,5,CV_RGB(0,255,0),2,8);
-                
-                float angleTol = 95;
-                
-                double inAngle = innerAngle(ptStart.x, ptStart.y, ptFar.x, ptFar.y, ptEnd.x, ptEnd.y);
-                Point middlePoint = Point((ptStart.x + ptEnd.x) / 2.0, (ptStart.y + ptEnd.y) / 2.0);
-                float distanceBetweenMidleAndFarPoint = distanceP2P(middlePoint, ptFar);
-                //                printf("distanceBetweenMidleAndFarPoint: %f\n", distanceBetweenMidleAndFarPoint);
-                
-                
-                
-                //                if(distanceP2P(ptStart, ptFar) > tolerance && distanceP2P(ptEnd, ptFar) > tolerance){
-                
-                if(distanceP2P(ptEnd, ptFar) > tolerance){
-                    //                    goodDefects.push_back(defects[i]);
-                    if (ptEnd.y < rect.y + rect.height - 2.0) {
-                        if (getAngleABC(ptStart, ptFar, ptEnd) < angleTol) {
-                            if (distanceBetweenMidleAndFarPoint > 0.5) {
-                                goodDefects.push_back(defects[i]);
-                            }
-                            
-                            if( ptEnd.y > (rect.y + rect.height -rect.height/4 ) ){
-                            } else if( ptStart.y > (rect.y + rect.height -rect.height/4 ) ){
-                            } else {
-                                //                            goodDefects.push_back(defects[i]);
-                            }
-                        }
-                    }
-                }
-            }
-            
-            
-            //            Vec4i temp;
-            //            float avgX, avgY;
-            //            tolerance=rect.width /6;
-            //            int startidx, endidx, faridx;
-            //            int startidx2, endidx2;
-            //            for(int i=0;i<goodDefects.size();i++){
-            //                for(int j=i;j<goodDefects.size();j++){
-            //                    startidx=goodDefects[i][0];
-            //                    Point ptStart(biggestContour[startidx] );
-            //                    endidx=goodDefects[i][1];
-            //                    Point ptEnd(biggestContour[endidx] );
-            //                    startidx2=goodDefects[j][0];
-            //                    Point ptStart2(biggestContour[startidx2] );
-            //                    endidx2=goodDefects[j][1];
-            //                    Point ptEnd2(biggestContour[endidx2] );
-            //                    if(distanceP2P(ptStart,ptEnd2) < tolerance ){
-            //                        biggestContour[startidx] = ptEnd2;
-            //                        break;
-            //                    }if(distanceP2P(ptEnd,ptStart2) < tolerance ){
-            //                        biggestContour[startidx2]=ptEnd;
-            //                    }
-            //                }
-            //            }
-            
-            
-            
-            
-            
-            for (int i = 0; i < goodDefects.size(); i++) {
-                int startIdx = goodDefects[i].val[0];
-                Point ptStart(biggestContour[startIdx]);
-                
-                int endIdx = goodDefects[i].val[1];
-                Point ptEnd(biggestContour[endIdx]);
-                
-                int farIdx = goodDefects[i].val[2];
-                Point ptFar(biggestContour[farIdx]);
-                
-                circle(defectsImage,ptStart,5,CV_RGB(255,0,0),2,8);
-                circle(defectsImage,ptFar,5,CV_RGB(0,0,255),2,8);
-                
-                circle(defectsImage,ptEnd,5,CV_RGB(0,255,0),2,8);
-            }
-            //            imshow("Defects", defectsImage);
-            //            imshow("DefectsAll", defectsImage2);
-            //            printf("defects: %lu \n", goodDefects.size());
-            
-            //            getFingerTips(workingImage, goodDefects, biggestContour, rect);
-            
-            bool isHand = detectIfHand(workingImage, rect);
-            if (isHand) {
-                drawFingerTips(workingImage);
-            }
-        }
-         */
     }
-//    findHand(workingImage);
     roiFrame = workingImage;
 }
 
-void findHand(Mat src) {
-    // Check if everything was fine
-    if (!src.data)
-        return ;
-    // Show source image
-    imshow("Source Image", src);
-    // Create a kernel that we will use for accuting/sharpening our image
-    //    Mat kernel = (Mat_<float>(3,3) <<
-    //                  1,  1, 1,
-    //                  1, -8, 1,
-    //                  1,  1, 1); // an approximation of second derivative, a quite strong kernel
-    //
-    //    Mat imgLaplacian;
-    //    Mat sharp = src; // copy source image to another temporary one
-    //    filter2D(sharp, imgLaplacian, CV_32F, kernel);
-    //    src.convertTo(sharp, CV_32F);
-    //    Mat imgResult = sharp - imgLaplacian;
-    //    // convert back to 8bits gray scale
-    //    imgResult.convertTo(imgResult, CV_8UC3);
-    //    imgLaplacian.convertTo(imgLaplacian, CV_8UC3);
-    //    // imshow( "Laplace Filtered Image", imgLaplacian );
-    //    imshow( "New Sharped Image", imgResult );
-    //    src = imgResult; // copy back
-    //    // Create binary image from source image
-    //    Mat bw;
-    //    cvtColor(src, bw, CV_BGR2GRAY);
-    //    threshold(bw, bw, 40, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
-    //    imshow("Binary Image", bw);
-    // Perform the distance transform algorithm
-    Mat dist;
-    distanceTransform(src, dist, CV_DIST_L1, 3);
-    // Normalize the distance image for range = {0.0, 1.0}
-    // so we can visualize and threshold it
-    normalize(dist, dist, 0, 1., NORM_MINMAX);
-    imshow("Distance ", distanceTranformImage);
-    imshow("Distance Transform Image2", dist);
-    // Threshold to obtain the peaks
-    // This will be the markers for the foreground objects
-//    threshold(dist, dist,127,255,CV_THRESH_BINARY);
-    
-    //    threshold(dist, dist, .8, 1., CV_THRESH_BINARY);
-}
 
-void solveHandDetection(Mat img) {
+Mat colorBalance(Mat img) {
     Mat YC, mask;
     
     cvtColor(img, YC, CV_BGR2RGB);
     float avgR = 0.0;
     float avgG = 0.0;
     float avgB = 0.0;
-  
+    
     float avgGray = 0.0;
     
-    for (int i = 0; i < YC.rows; ++i) {
-        for (int j = 0; j < YC.cols; ++j) {
+    for (int i = 0; i < YC.cols; ++i) {
+        for (int j = 0; j < YC.rows; ++j) {
             Vec3b point = YC.at<Vec3b>(Point(i, j));
             avgR += point[0];
             avgG += point[1];
@@ -683,9 +746,9 @@ void solveHandDetection(Mat img) {
     Mat YC2;
     
     YC2 = Mat(YC.rows, YC.cols, YC.type());
-
-    for (int i = 0; i < YC.rows; ++i) {
-        for (int j = 0; j < YC.cols; ++j) {
+    
+    for (int i = 0; i < YC.cols; ++i) {
+        for (int j = 0; j < YC.rows; ++j) {
             Vec3b point = YC.at<Vec3b>(Point(i, j));
             float R = aR * point[0];
             float G = aG * point[1];
@@ -702,43 +765,19 @@ void solveHandDetection(Mat img) {
             img.at<Vec3b>(Point(i, j)) = Vec3b(R, G, B);
         }
     }
-    
-   
+    cvtColor(img, YC, CV_RGB2BGR);
+
     
     imshow("image after color balance", img);
-
-//    cvtColor(img, img, CV_BGR2YCrCb);
-//    imshow("image after color balance YCrCb", img);
-
-    mask = Mat(img.rows, img.cols, CV_8U);
-//    imshow("YC", YC);
-    for (int i = 0; i < img.rows; ++i) {
-        for (int j = 0; j < img.cols; ++j) {
-            Vec3b point = img.at<Vec3b>(Point(i, j));
-            float Y = 16.0 + point[0] * 65.481 + 128.553 * point[1] + 24.966 * point[2];
-            float Cg = 128.0 + point[0] * -81.085 + 112.0 * point[1] + -30.915 * point[2];
-            float Cr = 128.0 + point[0] * 112.0 + -93.786 * point[1] + -18.214 * point[2];
-            
-//            float Cg = 128.0 + point[1] * 146.767;
-//            float Cr = 128.0 + point[2] * -24.163;
-//            float Cg = 162.879 * point[0];
-//            float Cr = 103.837 * point[2];
-            img.at<Vec3b>(Point(i, j)) = Vec3b(Y, Cg, Cr);
-            if (Cg > 85 && Cg< 135 && Cr > -Cg + 260 && Cr < -Cg + 280) {
-//                mask.at<uchar>(Point(i, j)) =  255.0;
-            } else {
-//                mask.at<uchar>(Point(i, j)) =  0.0;
-
-            }
-        }
-    }
-    imshow("lastFrame", YC);
-
-    imshow("MASKSSS", mask);
+    return img;
 }
 
 void startCamera(){
     VideoCapture cap(0); // open the deafult camera (i.e. the built in web cam)
+//    cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+//    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
+//    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('M', 'J', 'P', 'G'));
+
     if (!cap.isOpened()) { // openenig the video device failed
         printf("Cannot open video capture device.\n");
         return;
@@ -763,29 +802,35 @@ void startCamera(){
     int frameNum = -1;
     int frameCount = 0;
     state = 1;
+   
     for (;;){
+//        double fps = cap.get(CV_CAP_PROP_FPS);
+//        cout<<"FPS: "<< fps<<"\n";
+
         cap >> frame; // get a new frame from camera
         if (frame.empty()) {
             printf("End of the video file\n");
             continue;
         }
         flip(frame, frame, 1);
+        imshow("Original", frame);
+//        frame = colorBalance(frame);
         ++frameNum;
         //        imshow(WIN_SRC, frame);
         createROI(frame);
-        cout<<state;
+//        cout<<state;
         if (state == 1) {
             placeSquares();
         }
         c = waitKey(10);
-
+        
         
         
         if (c == 27) {
             // press ESC to exit
             printf("ESC pressed - capture finished");
             waitKey();
-//            break;  //ESC pressed
+            //            break;  //ESC pressed
         }
         if (c == 115) { //'s' pressed - snapp the image to a file
             state = 2;
@@ -804,7 +849,7 @@ void startCamera(){
         //        pyrDown(roiFrame, roiFrame);
         
         if (state >= 3) {
-//            solveHandDetection(roiFrame);
+            //            solveHandDetection(roiFrame);
             initTrackbars();
             performBinarization();
             
