@@ -26,16 +26,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project2.cpp"
-            timestampString = "548436149.936003"
+            timestampString = "549544320.085369"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "890"
-            endingLineNumber = "890"
-            landmarkName = "findCentroid(Mat image, bool rightHand)"
+            startingLineNumber = "900"
+            endingLineNumber = "900"
+            landmarkName = "getMedianWristPoint(Mat image, float radius, bool rightHand)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -46,12 +46,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project2.cpp"
-            timestampString = "548436149.936451"
+            timestampString = "549544320.086061"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1232"
-            endingLineNumber = "1232"
-            landmarkName = "startCamera()"
+            startingLineNumber = "908"
+            endingLineNumber = "908"
+            landmarkName = "getMedianWristPoint(Mat image, float radius, bool rightHand)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -62,12 +62,60 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "LicenseProject/Project2.cpp"
-            timestampString = "548436149.936762"
+            timestampString = "549544320.086337"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "894"
-            endingLineNumber = "894"
-            landmarkName = "findCentroid(Mat image, bool rightHand)"
+            startingLineNumber = "912"
+            endingLineNumber = "912"
+            landmarkName = "getMedianWristPoint(Mat image, float radius, bool rightHand)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "LicenseProject/Project2.cpp"
+            timestampString = "549544320.086594"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "919"
+            endingLineNumber = "919"
+            landmarkName = "getMedianWristPoint(Mat image, float radius, bool rightHand)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "LicenseProject/Project2.cpp"
+            timestampString = "549544320.086845"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "928"
+            endingLineNumber = "928"
+            landmarkName = "getMedianWristPoint(Mat image, float radius, bool rightHand)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "LicenseProject/Project2.cpp"
+            timestampString = "549544320.0871"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "904"
+            endingLineNumber = "904"
+            landmarkName = "getMedianWristPoint(Mat image, float radius, bool rightHand)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

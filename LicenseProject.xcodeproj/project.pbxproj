@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		222FD13C20BC1B6A00EC8B1F /* ImageRepository.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 222FD13A20BC1B6A00EC8B1F /* ImageRepository.cpp */; };
 		22C719E820AB800F00D33CEF /* Project2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C719E620AB800F00D33CEF /* Project2.cpp */; };
 		22D4A236205D0B3900268F08 /* dibfft.lib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D49DE5205D0B3900268F08 /* dibfft.lib */; };
 		22D4A237205D0B3900268F08 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22D4A234205D0B3900268F08 /* main.cpp */; };
@@ -26,6 +27,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		222FD13820BC0D3900EC8B1F /* ButtonBackgroundImage.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ButtonBackgroundImage.jpg; sourceTree = "<group>"; };
+		222FD13920BC145A00EC8B1F /* BlueButtonBackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BlueButtonBackground.png; sourceTree = "<group>"; };
+		222FD13A20BC1B6A00EC8B1F /* ImageRepository.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ImageRepository.cpp; sourceTree = "<group>"; };
+		222FD13B20BC1B6A00EC8B1F /* ImageRepository.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ImageRepository.hpp; sourceTree = "<group>"; };
 		226DA4001E646E3300D8C14D /* LicenseProject */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LicenseProject; sourceTree = BUILT_PRODUCTS_DIR; };
 		22808885207F2FBF00F7E5D2 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		22808887207F2FC700F7E5D2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -54,6 +59,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		222FD13720BC0D2E00EC8B1F /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				222FD13820BC0D3900EC8B1F /* ButtonBackgroundImage.jpg */,
+				222FD13920BC145A00EC8B1F /* BlueButtonBackground.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
 		226DA3F71E646E3300D8C14D = {
 			isa = PBXGroup;
 			children = (
@@ -83,6 +97,7 @@
 		22D49D4D205D0B3800268F08 /* LicenseProject */ = {
 			isa = PBXGroup;
 			children = (
+				222FD13720BC0D2E00EC8B1F /* Images */,
 				22D4A234205D0B3900268F08 /* main.cpp */,
 				22A6CC642084BE2D00324F05 /* hand2.png */,
 				22A6CC632084BDEF00324F05 /* hand.png */,
@@ -91,10 +106,12 @@
 				22D49D76205D0B3900268F08 /* dibfft.h */,
 				22D49DE5205D0B3900268F08 /* dibfft.lib */,
 				22D49DE7205D0B3900268F08 /* opencv-3.2.0 */,
-				22D4A238205D157E00268F08 /* Square.cpp */,
 				22D4A239205D157E00268F08 /* Square.hpp */,
-				22C719E620AB800F00D33CEF /* Project2.cpp */,
+				22D4A238205D157E00268F08 /* Square.cpp */,
 				22C719E720AB800F00D33CEF /* Project2.hpp */,
+				22C719E620AB800F00D33CEF /* Project2.cpp */,
+				222FD13B20BC1B6A00EC8B1F /* ImageRepository.hpp */,
+				222FD13A20BC1B6A00EC8B1F /* ImageRepository.cpp */,
 			);
 			path = LicenseProject;
 			sourceTree = "<group>";
@@ -8879,6 +8896,7 @@
 				22D4A237205D0B3900268F08 /* main.cpp in Sources */,
 				22D4A23A205D157E00268F08 /* Square.cpp in Sources */,
 				22C719E820AB800F00D33CEF /* Project2.cpp in Sources */,
+				222FD13C20BC1B6A00EC8B1F /* ImageRepository.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

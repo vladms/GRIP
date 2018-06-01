@@ -29,15 +29,3 @@ using namespace std;
 
 #endif /* Project_hpp */
 
-
-
-
-//
-//class SPoint{
-//public:
-//    int x, y;
-//    int superPixelId;
-//};
-//
-//void startCamera();
-//

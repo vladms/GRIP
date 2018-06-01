@@ -15,6 +15,7 @@
 #include "Project2.hpp"
 #include <string>
 #include "dibfft.h"
+#include "ImageRepository.hpp"
 
 using namespace cv;
 using namespace std;
@@ -27,23 +28,25 @@ struct point{
 };
 
 int menuState;
-Mat3b canvas;
+Mat canvas;
 string startButtonText("Start learning!");
 string menuWindowName = "Learning is COOL";
 string levelsWindowName = "Choose your level";
 
 Rect startButton;
-Rect backButton;
+//Rect backButton;
 Rect level1Button;
 Rect level2Button;
+
+Size menuSize;
 
 void callBackFunc(int event, int x, int y, int flags, void* userdata) {
     if (event == EVENT_LBUTTONDOWN) {
         cout<< x<< " " << y << endl;
-        if (backButton.contains(Point(x, y)) && menuState == 1) {
-            setupStartMenu();
-            cout << "Clicked back button!" << endl;
-        }
+//        if (backButton.contains(Point(x, y)) && menuState == 1) {
+//            setupStartMenu();
+//            cout << "Clicked back button!" << endl;
+//        }
         if (startButton.contains(Point(x, y)) && menuState == 0) {
             showLevelsMenu();
             cout << "Clicked start!" << endl;
@@ -54,6 +57,7 @@ void callBackFunc(int event, int x, int y, int flags, void* userdata) {
         
         if (level1Button.contains(Point(x, y))) {
             cout << "Clicked level1!" << endl;
+            startCamera();
         }
         if (level2Button.contains(Point(x, y))) {
             
@@ -73,27 +77,33 @@ void callBackFunc(int event, int x, int y, int flags, void* userdata) {
 
 void showLevelsMenu() {
     menuState = 1;
-    Mat3b img(600, 600, Vec3b(0, 255, 0));
-    
-    backButton = Rect(img.cols / 4,0,img.cols / 2, 50);
-    level1Button = Rect(0,60,img.cols, 50);
-    level2Button = Rect(0,120,img.cols, 50);
+
+    Mat img(menuSize.width, menuSize.height, CV_8UC3, Scalar(0, 0, 0));
+
+    level1Button = Rect(0, 0,img.rows, 100);
+    level2Button = Rect(0, 120,img.rows, 100);
     
     // The canvas
-    canvas = Mat3b(img.rows + 3 * backButton.height, img.cols, Vec3b(255.0, 255.0, 255.0));
+    canvas = Mat(img.rows, img.cols, CV_8UC3, Scalar(255.0, 255.0, 255.0));
     
-    // Draw the button
-    canvas(backButton) = Vec3b(200,200,200);
-    canvas(level1Button) = Vec3b(200,200,200);
-    canvas(level2Button) = Vec3b(200,200,200);
+    Mat menuBackgroundImage = loadMenuBackground();
+    resize(menuBackgroundImage, menuBackgroundImage, canvas.size());
+    menuBackgroundImage.copyTo(canvas);
     
-    putText(canvas(backButton), "Back", Point(backButton.width / 2.0, backButton.height*0.7), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,0));
-    putText(canvas(level1Button), "Level 1", Point(level1Button.width / 2.0, level1Button.height*0.7), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,0));
-    putText(canvas(level2Button), "Level 2", Point(level2Button.width / 2.0, level2Button.height*0.7), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,0));
+    
+    Mat buttonBackgroundImage;
+    buttonBackgroundImage = loadMenuButtonsBackground();
+    
+    resize(buttonBackgroundImage, buttonBackgroundImage, level1Button.size());
+    buttonBackgroundImage.copyTo(canvas(level1Button));
+    buttonBackgroundImage.copyTo(canvas(level2Button));
+    
+    putText(canvas(level1Button), "ADUNARE", Point(2 * level1Button.width / 5.5, level1Button.height*0.5), FONT_HERSHEY_PLAIN, 3, Scalar(0,0,0), 5);
+    putText(canvas(level2Button), "SCADERE", Point(2 * level2Button.width / 5.5, level2Button.height*0.5), FONT_HERSHEY_PLAIN, 3, Scalar(0,0,0), 5);
     
     // Setup callback function
-    //    namedWindow(menuWindowName);
-    //    setMouseCallback(menuWindowName, callBackFunc);
+    namedWindow(menuWindowName);
+    setMouseCallback(menuWindowName, callBackFunc);
     
     imshow(menuWindowName, canvas);
     waitKey();
@@ -114,8 +124,8 @@ void setupStartMenu() {
     canvas(startButton) = Vec3b(200,200,200);
     putText(canvas(startButton), startButtonText, Point(startButton.width*0.35, startButton.height*0.7), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,0));
     
-    // Draw the image
-    //    img.copyTo(canvas(Rect(0, startButton.height, img.cols, img.rows)));
+    //Draw the image
+    img.copyTo(canvas(Rect(0, startButton.height, img.cols, img.rows)));
     
     // Setup callback function
     namedWindow(menuWindowName);
@@ -176,7 +186,9 @@ int main(){
     //
     //    }
     //    while (op!=0);
-//        setupStartMenu();
+    
+    menuSize = Size(600, 600);
+//    showLevelsMenu();
         startCamera();
 //    findHand();
     
