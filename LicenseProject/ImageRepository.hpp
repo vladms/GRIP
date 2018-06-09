@@ -23,5 +23,8 @@ using namespace std;
 
 Mat loadMenuBackground();
 Mat loadMenuButtonsBackground();
-
+Mat loadAppleImage();
+Mat loadPineappleImage();
+Mat loadFlowerImage();
+Mat loadLemonImage();
 #endif /* ImageRepository_hpp */

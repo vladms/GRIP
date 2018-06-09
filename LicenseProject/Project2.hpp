@@ -22,13 +22,14 @@
 #include <random>
 #include <string>
 #include <thread>
+#include "Level.hpp"
+#include "SoundRepository.hpp"
 
 using namespace cv;
 using namespace std;
+void updatePlayingLevel(Level *currentLevel);
+void setupLevel(Level *level);
+void startCamera(VideoCapture cap);
+int newFrame(VideoCapture cap, Mat frame, int state, bool updateResult, int secondsLeft);
 
 #endif /* Project_hpp */
-
-void startCamera();
-
-
-

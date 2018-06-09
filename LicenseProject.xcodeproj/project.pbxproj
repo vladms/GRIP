@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		222FD13C20BC1B6A00EC8B1F /* ImageRepository.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 222FD13A20BC1B6A00EC8B1F /* ImageRepository.cpp */; };
+		2260352920C2C27D00D94F1C /* Level.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2260352720C2C27D00D94F1C /* Level.cpp */; };
+		2260352D20C2C6F700D94F1C /* Sublevel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2260352B20C2C6F700D94F1C /* Sublevel.cpp */; };
+		2294D0F820C53E680098878A /* Hand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2294D0F620C53E680098878A /* Hand.cpp */; };
+		22B3B70420CC12F8002A644A /* SoundRepository.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B3B70220CC12F8002A644A /* SoundRepository.cpp */; };
 		22C719E820AB800F00D33CEF /* Project2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C719E620AB800F00D33CEF /* Project2.cpp */; };
 		22D4A236205D0B3900268F08 /* dibfft.lib in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D49DE5205D0B3900268F08 /* dibfft.lib */; };
 		22D4A237205D0B3900268F08 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22D4A234205D0B3900268F08 /* main.cpp */; };
@@ -31,20 +35,38 @@
 		222FD13920BC145A00EC8B1F /* BlueButtonBackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BlueButtonBackground.png; sourceTree = "<group>"; };
 		222FD13A20BC1B6A00EC8B1F /* ImageRepository.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ImageRepository.cpp; sourceTree = "<group>"; };
 		222FD13B20BC1B6A00EC8B1F /* ImageRepository.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ImageRepository.hpp; sourceTree = "<group>"; };
+		2260352720C2C27D00D94F1C /* Level.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Level.cpp; sourceTree = "<group>"; };
+		2260352820C2C27D00D94F1C /* Level.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Level.hpp; sourceTree = "<group>"; };
+		2260352B20C2C6F700D94F1C /* Sublevel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sublevel.cpp; sourceTree = "<group>"; };
+		2260352C20C2C6F700D94F1C /* Sublevel.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Sublevel.hpp; sourceTree = "<group>"; };
 		226DA4001E646E3300D8C14D /* LicenseProject */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LicenseProject; sourceTree = BUILT_PRODUCTS_DIR; };
 		22808885207F2FBF00F7E5D2 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		22808887207F2FC700F7E5D2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		22A6CC632084BDEF00324F05 /* hand.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hand.png; sourceTree = "<group>"; };
-		22A6CC642084BE2D00324F05 /* hand2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hand2.png; sourceTree = "<group>"; };
+		2294D0F620C53E680098878A /* Hand.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Hand.cpp; sourceTree = "<group>"; };
+		2294D0F720C53E680098878A /* Hand.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Hand.hpp; sourceTree = "<group>"; };
+		229C35C420CAA24A00E1865C /* pineapple.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = pineapple.jpg; sourceTree = "<group>"; };
+		229C35C520CAA24A00E1865C /* flower.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = flower.png; sourceTree = "<group>"; };
+		229C35C620CAA24A00E1865C /* apple.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = apple.jpg; sourceTree = "<group>"; };
+		229C35C720CAA24A00E1865C /* lemon.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = lemon.jpg; sourceTree = "<group>"; };
+		22B3B70220CC12F8002A644A /* SoundRepository.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SoundRepository.cpp; sourceTree = "<group>"; };
+		22B3B70320CC12F8002A644A /* SoundRepository.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SoundRepository.hpp; sourceTree = "<group>"; };
+		22B3B70720CC1966002A644A /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = OpenAL.framework; sourceTree = "<group>"; };
+		22B3B70920CC1AB9002A644A /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../Desktop/SDL2_mixer.framework; sourceTree = "<group>"; };
+		22B3B70B20CC1BCC002A644A /* sfml-audio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "sfml-audio.framework"; path = "../../../Desktop/SFML-2.5.0-macOS-clang/Frameworks/sfml-audio.framework"; sourceTree = "<group>"; };
+		22B3B70C20CC1BCC002A644A /* sfml-graphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "sfml-graphics.framework"; path = "../../../Desktop/SFML-2.5.0-macOS-clang/Frameworks/sfml-graphics.framework"; sourceTree = "<group>"; };
+		22B3B70D20CC1BCC002A644A /* sfml-network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "sfml-network.framework"; path = "../../../Desktop/SFML-2.5.0-macOS-clang/Frameworks/sfml-network.framework"; sourceTree = "<group>"; };
+		22B3B70E20CC1BCC002A644A /* SFML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SFML.framework; path = "../../../Desktop/SFML-2.5.0-macOS-clang/Frameworks/SFML.framework"; sourceTree = "<group>"; };
+		22B3B70F20CC1BCC002A644A /* sfml-system.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "sfml-system.framework"; path = "../../../Desktop/SFML-2.5.0-macOS-clang/Frameworks/sfml-system.framework"; sourceTree = "<group>"; };
+		22B3B71020CC1BCC002A644A /* sfml-window.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "sfml-window.framework"; path = "../../../Desktop/SFML-2.5.0-macOS-clang/Frameworks/sfml-window.framework"; sourceTree = "<group>"; };
+		22B3B71F20CC1EE5002A644A /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		22C719E620AB800F00D33CEF /* Project2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Project2.cpp; sourceTree = "<group>"; };
 		22C719E720AB800F00D33CEF /* Project2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Project2.hpp; sourceTree = "<group>"; };
 		22D49D76205D0B3900268F08 /* dibfft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dibfft.h; sourceTree = "<group>"; };
-		22D49D77205D0B3900268F08 /* Project.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Project.cpp; sourceTree = "<group>"; };
-		22D49DE4205D0B3900268F08 /* Project.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Project.hpp; sourceTree = "<group>"; };
 		22D49DE5205D0B3900268F08 /* dibfft.lib */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = dibfft.lib; sourceTree = "<group>"; };
 		22D4A234205D0B3900268F08 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		22D4A238205D157E00268F08 /* Square.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Square.cpp; sourceTree = "<group>"; };
 		22D4A239205D157E00268F08 /* Square.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Square.hpp; sourceTree = "<group>"; };
+		22EE693420CBD923002864A0 /* TEST.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = TEST.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,9 +85,32 @@
 			isa = PBXGroup;
 			children = (
 				222FD13820BC0D3900EC8B1F /* ButtonBackgroundImage.jpg */,
+				229C35C620CAA24A00E1865C /* apple.jpg */,
+				229C35C520CAA24A00E1865C /* flower.png */,
+				229C35C720CAA24A00E1865C /* lemon.jpg */,
+				22EE693420CBD923002864A0 /* TEST.png */,
+				229C35C420CAA24A00E1865C /* pineapple.jpg */,
 				222FD13920BC145A00EC8B1F /* BlueButtonBackground.png */,
 			);
 			path = Images;
+			sourceTree = "<group>";
+		};
+		2260352620C2C27000D94F1C /* Level */ = {
+			isa = PBXGroup;
+			children = (
+				2260352820C2C27D00D94F1C /* Level.hpp */,
+				2260352720C2C27D00D94F1C /* Level.cpp */,
+			);
+			path = Level;
+			sourceTree = "<group>";
+		};
+		2260352A20C2C6EE00D94F1C /* Sublevel */ = {
+			isa = PBXGroup;
+			children = (
+				2260352C20C2C6F700D94F1C /* Sublevel.hpp */,
+				2260352B20C2C6F700D94F1C /* Sublevel.cpp */,
+			);
+			path = Sublevel;
 			sourceTree = "<group>";
 		};
 		226DA3F71E646E3300D8C14D = {
@@ -88,21 +133,38 @@
 		22808884207F2FBF00F7E5D2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				22B3B71F20CC1EE5002A644A /* OpenAL.framework */,
+				22B3B70B20CC1BCC002A644A /* sfml-audio.framework */,
+				22B3B70C20CC1BCC002A644A /* sfml-graphics.framework */,
+				22B3B70D20CC1BCC002A644A /* sfml-network.framework */,
+				22B3B70F20CC1BCC002A644A /* sfml-system.framework */,
+				22B3B71020CC1BCC002A644A /* sfml-window.framework */,
+				22B3B70E20CC1BCC002A644A /* SFML.framework */,
+				22B3B70920CC1AB9002A644A /* SDL2_mixer.framework */,
+				22B3B70720CC1966002A644A /* OpenAL.framework */,
 				22808887207F2FC700F7E5D2 /* Foundation.framework */,
 				22808885207F2FBF00F7E5D2 /* AVFoundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		2294D0F520C53E600098878A /* Hand */ = {
+			isa = PBXGroup;
+			children = (
+				2294D0F620C53E680098878A /* Hand.cpp */,
+				2294D0F720C53E680098878A /* Hand.hpp */,
+			);
+			path = Hand;
+			sourceTree = "<group>";
+		};
 		22D49D4D205D0B3800268F08 /* LicenseProject */ = {
 			isa = PBXGroup;
 			children = (
+				2294D0F520C53E600098878A /* Hand */,
+				2260352A20C2C6EE00D94F1C /* Sublevel */,
+				2260352620C2C27000D94F1C /* Level */,
 				222FD13720BC0D2E00EC8B1F /* Images */,
 				22D4A234205D0B3900268F08 /* main.cpp */,
-				22A6CC642084BE2D00324F05 /* hand2.png */,
-				22A6CC632084BDEF00324F05 /* hand.png */,
-				22D49D77205D0B3900268F08 /* Project.cpp */,
-				22D49DE4205D0B3900268F08 /* Project.hpp */,
 				22D49D76205D0B3900268F08 /* dibfft.h */,
 				22D49DE5205D0B3900268F08 /* dibfft.lib */,
 				22D49DE7205D0B3900268F08 /* opencv-3.2.0 */,
@@ -112,6 +174,8 @@
 				22C719E620AB800F00D33CEF /* Project2.cpp */,
 				222FD13B20BC1B6A00EC8B1F /* ImageRepository.hpp */,
 				222FD13A20BC1B6A00EC8B1F /* ImageRepository.cpp */,
+				22B3B70320CC12F8002A644A /* SoundRepository.hpp */,
+				22B3B70220CC12F8002A644A /* SoundRepository.cpp */,
 			);
 			path = LicenseProject;
 			sourceTree = "<group>";
@@ -8895,6 +8959,10 @@
 			files = (
 				22D4A237205D0B3900268F08 /* main.cpp in Sources */,
 				22D4A23A205D157E00268F08 /* Square.cpp in Sources */,
+				2260352920C2C27D00D94F1C /* Level.cpp in Sources */,
+				2260352D20C2C6F700D94F1C /* Sublevel.cpp in Sources */,
+				2294D0F820C53E680098878A /* Hand.cpp in Sources */,
+				22B3B70420CC12F8002A644A /* SoundRepository.cpp in Sources */,
 				22C719E820AB800F00D33CEF /* Project2.cpp in Sources */,
 				222FD13C20BC1B6A00EC8B1F /* ImageRepository.cpp in Sources */,
 			);
@@ -9011,11 +9079,16 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				DEVELOPMENT_TEAM = M4SB657XD7;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LIBRARY_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/IP2017",
 					/usr/local/lib,
 					"$(PROJECT_DIR)/LicenseProject",
+					/Users/VladBonta/Mine/License/Grip/LicenseProject/SimpleAudioLib,
 				);
 				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
@@ -9036,6 +9109,7 @@
 					"-lopencv_videostab",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
@@ -9044,11 +9118,16 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				DEVELOPMENT_TEAM = M4SB657XD7;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LIBRARY_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/IP2017",
 					/usr/local/lib,
 					"$(PROJECT_DIR)/LicenseProject",
+					/Users/VladBonta/Mine/License/Grip/LicenseProject/SimpleAudioLib,
 				);
 				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
@@ -9069,6 +9148,7 @@
 					"-lopencv_videostab",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};

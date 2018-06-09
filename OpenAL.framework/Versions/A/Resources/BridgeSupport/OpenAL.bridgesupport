@@ -1,0 +1,425 @@
+<?xml version='1.0'?>
+<!DOCTYPE signatures SYSTEM "file://localhost/System/Library/DTDs/BridgeSupport.dtd">
+<signatures version='1.0'>
+<opaque name='ALCcontext' type='^{ALCcontext_struct=}'/>
+<opaque name='ALCdevice' type='^{ALCdevice_struct=}'/>
+<function name='alBuffer3f'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='f'/>
+<arg type='f'/>
+<arg type='f'/>
+</function>
+<function name='alBuffer3i'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alBufferData'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^v'/>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alBufferf'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='f'/>
+</function>
+<function name='alBufferfv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alBufferi'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alBufferiv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alDeleteBuffers'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alDeleteSources'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alDisable'>
+<arg type='i'/>
+</function>
+<function name='alDistanceModel'>
+<arg type='i'/>
+</function>
+<function name='alDopplerFactor'>
+<arg type='f'/>
+</function>
+<function name='alDopplerVelocity'>
+<arg type='f'/>
+</function>
+<function name='alEnable'>
+<arg type='i'/>
+</function>
+<function name='alGenBuffers'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alGenSources'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alGetBoolean'>
+<arg type='i'/>
+<retval type='c'/>
+</function>
+<function name='alGetBooleanv'>
+<arg type='i'/>
+<arg type='*'/>
+</function>
+<function name='alGetBuffer3f'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+<arg type='^f'/>
+<arg type='^f'/>
+</function>
+<function name='alGetBuffer3i'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+<arg type='^i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetBufferf'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetBufferfv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetBufferi'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetBufferiv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetDouble'>
+<arg type='i'/>
+<retval type='d'/>
+</function>
+<function name='alGetDoublev'>
+<arg type='i'/>
+<arg type='^d'/>
+</function>
+<function name='alGetEnumValue'>
+<arg type='*'/>
+<retval type='i'/>
+</function>
+<function name='alGetError'>
+<retval type='i'/>
+</function>
+<function name='alGetFloat'>
+<arg type='i'/>
+<retval type='f'/>
+</function>
+<function name='alGetFloatv'>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetInteger'>
+<arg type='i'/>
+<retval type='i'/>
+</function>
+<function name='alGetIntegerv'>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetListener3f'>
+<arg type='i'/>
+<arg type='^f'/>
+<arg type='^f'/>
+<arg type='^f'/>
+</function>
+<function name='alGetListener3i'>
+<arg type='i'/>
+<arg type='^i'/>
+<arg type='^i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetListenerf'>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetListenerfv'>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetListeneri'>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetListeneriv'>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetProcAddress'>
+<arg type='*'/>
+<retval type='^v'/>
+</function>
+<function name='alGetSource3f'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+<arg type='^f'/>
+<arg type='^f'/>
+</function>
+<function name='alGetSource3i'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+<arg type='^i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetSourcef'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetSourcefv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alGetSourcei'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetSourceiv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alGetString'>
+<arg type='i'/>
+<retval type='*'/>
+</function>
+<function name='alIsBuffer'>
+<arg type='I'/>
+<retval type='c'/>
+</function>
+<function name='alIsEnabled'>
+<arg type='i'/>
+<retval type='c'/>
+</function>
+<function name='alIsExtensionPresent'>
+<arg type='*'/>
+<retval type='c'/>
+</function>
+<function name='alIsSource'>
+<arg type='I'/>
+<retval type='c'/>
+</function>
+<function name='alListener3f'>
+<arg type='i'/>
+<arg type='f'/>
+<arg type='f'/>
+<arg type='f'/>
+</function>
+<function name='alListener3i'>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alListenerf'>
+<arg type='i'/>
+<arg type='f'/>
+</function>
+<function name='alListenerfv'>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alListeneri'>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alListeneriv'>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alSource3f'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='f'/>
+<arg type='f'/>
+<arg type='f'/>
+</function>
+<function name='alSource3i'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alSourcePause'>
+<arg type='I'/>
+</function>
+<function name='alSourcePausev'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alSourcePlay'>
+<arg type='I'/>
+</function>
+<function name='alSourcePlayv'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alSourceQueueBuffers'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alSourceRewind'>
+<arg type='I'/>
+</function>
+<function name='alSourceRewindv'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alSourceStop'>
+<arg type='I'/>
+</function>
+<function name='alSourceStopv'>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alSourceUnqueueBuffers'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^I'/>
+</function>
+<function name='alSourcef'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='f'/>
+</function>
+<function name='alSourcefv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^f'/>
+</function>
+<function name='alSourcei'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='i'/>
+</function>
+<function name='alSourceiv'>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alSpeedOfSound'>
+<arg type='f'/>
+</function>
+<function name='alcCaptureCloseDevice'>
+<arg type='^{ALCdevice_struct=}'/>
+<retval type='c'/>
+</function>
+<function name='alcCaptureOpenDevice'>
+<arg type='*'/>
+<arg type='I'/>
+<arg type='i'/>
+<arg type='i'/>
+<retval type='^{ALCdevice_struct=}'/>
+</function>
+<function name='alcCaptureSamples'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='^v'/>
+<arg type='i'/>
+</function>
+<function name='alcCaptureStart'>
+<arg type='^{ALCdevice_struct=}'/>
+</function>
+<function name='alcCaptureStop'>
+<arg type='^{ALCdevice_struct=}'/>
+</function>
+<function name='alcCloseDevice'>
+<arg type='^{ALCdevice_struct=}'/>
+<retval type='c'/>
+</function>
+<function name='alcCreateContext'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='^i'/>
+<retval type='^{ALCcontext_struct=}'/>
+</function>
+<function name='alcDestroyContext'>
+<arg type='^{ALCcontext_struct=}'/>
+</function>
+<function name='alcGetContextsDevice'>
+<arg type='^{ALCcontext_struct=}'/>
+<retval type='^{ALCdevice_struct=}'/>
+</function>
+<function name='alcGetCurrentContext'>
+<retval type='^{ALCcontext_struct=}'/>
+</function>
+<function name='alcGetEnumValue'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='*'/>
+<retval type='i'/>
+</function>
+<function name='alcGetError'>
+<arg type='^{ALCdevice_struct=}'/>
+<retval type='i'/>
+</function>
+<function name='alcGetIntegerv'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='i'/>
+<arg type='i'/>
+<arg type='^i'/>
+</function>
+<function name='alcGetProcAddress'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='*'/>
+<retval type='^v'/>
+</function>
+<function name='alcGetString'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='i'/>
+<retval type='*'/>
+</function>
+<function name='alcIsExtensionPresent'>
+<arg type='^{ALCdevice_struct=}'/>
+<arg type='*'/>
+<retval type='c'/>
+</function>
+<function name='alcMakeContextCurrent'>
+<arg type='^{ALCcontext_struct=}'/>
+<retval type='c'/>
+</function>
+<function name='alcOpenDevice'>
+<arg type='*'/>
+<retval type='^{ALCdevice_struct=}'/>
+</function>
+<function name='alcProcessContext'>
+<arg type='^{ALCcontext_struct=}'/>
+</function>
+<function name='alcSuspendContext'>
+<arg type='^{ALCcontext_struct=}'/>
+</function>
+</signatures>

@@ -8,6 +8,8 @@
 
 #include "Project2.hpp"
 #include "Square.hpp"
+#include "Hand.hpp"
+#include "ImageRepository.hpp"
 
 //#define COLORSPACE_TO CV_BGR2HSV
 //#define COLORSPACE_ORIG CV_HSV2BGR
@@ -18,9 +20,9 @@
 //#define COLORSPACE_TO CV_BGR2HLS
 //#define COLORSPACE_ORIG CV_HLS2BGR
 
-
 #define COLORSPACE_TO CV_BGR2YCrCb
 #define COLORSPACE_ORIG CV_YCrCb2BGR
+
 #define NR_OF_SAMPLES 1
 using namespace cv;
 using namespace std;
@@ -36,6 +38,8 @@ using namespace std;
 int state = 0;
 string ROI_NAME = "Rectangle Of Interest";
 string TRACKBARS_NAME = "trackbars";
+string playingScreenName = "GRIP";
+bool playedSoundOnce;
 Size ROISize;
 Size capS;
 Mat roiFrame;
@@ -44,76 +48,107 @@ Mat sat;
 Mat coloredRoiFrame;
 Mat distanceTranformImage;
 Rect handDetectedRect;
+
+Hand *rightHand;
+Hand *leftHand;
+vector <Vec3b> handMedianColor;
+
+float resultTextSize = 3;
+float colorEpsilon = 3.0;
+float secondsLeftToDisplayHand;
 int c_lower[NR_OF_SAMPLES][3];
 int c_upper[NR_OF_SAMPLES][3];
 void solveHandDetection(Mat img);
 void findHand(Mat src);
 Point handDetectedCenterPoint;
+
 #define PI 3.14159
-float findTheRadius(Mat image, bool rightHand, vector<Point> contours);
-vector<Point> hullPointsRightHand;
+float findTheRadius(Mat image, bool isRightHand, vector<Point> contours);
 
+int lastNrOfFingers;
+bool answeredCorrectly = false;
 
-Rect leftROI;
-Rect rightROI;
+Level *currentPlayingLevel;
+Scalar currentLeftRectColor = Scalar(255, 0, 0);
+Scalar currentRightRectColor = Scalar(255, 0, 0);
 
-Mat leftImage;
-Mat rightImage;
+Scalar redColor = Scalar(0, 0, 255);
+Scalar blueColor = Scalar(255, 0, 0);
+Scalar greenColor = Scalar(0, 255, 0);
+Scalar whiteColor = Scalar(255, 255, 255);
+Scalar blackColor = Scalar(0, 0, 0);
+Vec3b lowestColor = Vec3b(255,255,255);
+Vec3b heighestColor = Vec3b(0,0,0);
+
 Mat originalImage;
-Mat leftImageBinarized;
-Mat rightImageBinarized;
-Rect rightHandDetectedRect;
-Rect leftHandDetectedRect;
-Mat leftImageDT;
-Mat rightImageDT;
-Mat leftImageFilledContours;
-Mat rightImageFilledContours;
-Point rightHandDetectedCenterPoint;
-Point leftHandDetectedCenterPoint;
-Point rightHandCentroidPoint;
-Point leftHandCentroidPoint;
-vector<Point> rightHandBiggestContour;
-vector<Point> leftHandBiggestContour;
 
 
-vector <Square> squarePoints;
-vector <Vec3b> medianColor;
 Scalar standardDeviationScalar;
 
 int currentSample = 0;
-Mat finalBWFrame;
-int binarizationOffsetValue = 25.0;
-Mat workingHandImage;
 string intToString(int number);
 
+float distanceP2P(Point a, Point b){
+    float d= sqrt(fabs( pow(a.x-b.x,2) + pow(a.y-b.y,2) )) ;
+    return d;
+}
+
 void printTextOnImage(Mat src, string text){
-    rectangle(src, Point(0.0, 0.0), Point(capS.width / 2.0, 30.0), Scalar(255.0, 255.0, 255.0), -1);
-    putText(src,text,Point(0.0, 20.0),1, 1.2f,Scalar(0.0, 0.0, 0.0),2);
+    rectangle(src, Point(0.0, 0.0), Point(src.cols, 30.0), Scalar(255.0, 255.0, 255.0), -1);
+    putText(src,text,Point(src.cols / 4.0, 20.0),1, 1.2f,Scalar(0.0, 0.0, 0.0),2);
+}
+
+void resetMedianCountFingers() {
+    for (int i = 0; i < 6; ++i) {
+        leftHand->handReadNumbers[i] = 0;
+        rightHand->handReadNumbers[i] = 0;
+    }
     
 }
 
-void placeSquares(Mat image) {
-    float width = rightROI.width;
-    float height = ROISize.height;
+void placeSquares(Mat image, bool isRightHand) {
+    float width = 0.0;
+    float height = 0.0;
+    float x = 0.0;
+    float y = 0.0;
+    
+    if (isRightHand) {
+        width = rightHand->handROI.width;
+        height = rightHand->handROI.height;
+        x = rightHand->handROI.x;
+        y = rightHand->handROI.y;
+    } else {
+        width = leftHand->handROI.width;
+        height = leftHand->handROI.height;
+        x = leftHand->handROI.x;
+        y = leftHand->handROI.y;
+    }
+    vector <Square> squarePoints;
     
     squarePoints.clear();
-    squarePoints.push_back(Square(Point(rightROI.x + width / 3, height / 4)));
-    squarePoints.push_back(Square(Point(rightROI.x + width / 4, height / 2)));
-    squarePoints.push_back(Square(Point(rightROI.x + width / 3, height / 1.5)));
-    squarePoints.push_back(Square(Point(rightROI.x + width / 2, height / 2)));
-    squarePoints.push_back(Square(Point(rightROI.x + width / 2.5, height / 2.5)));
-    squarePoints.push_back(Square(Point(rightROI.x + width / 2, height / 1.5)));
-    squarePoints.push_back(Square(Point(rightROI.x + width / 2.5, height / 1.8)));
+    squarePoints.push_back(Square(Point(x + width / 3, y + height / 6)));
+    squarePoints.push_back(Square(Point(x + width / 3, y + height / 3)));
+    squarePoints.push_back(Square(Point(x + width / 2, y + height / 3)));
+    squarePoints.push_back(Square(Point(x + width / 4, y + height / 1.5)));
+    squarePoints.push_back(Square(Point(x + width / 2, y + height / 1.5)));
+    squarePoints.push_back(Square(Point(x + width / 5, y + height / 2.5)));
+    squarePoints.push_back(Square(Point(x + width / 3, y + height / 2.0)));
     
-    string hintText = string("Cover small rectangles with palm and press 'S' to save hand color");
-    printTextOnImage(roiFrame,hintText);
+    
+    if (isRightHand) {
+        rightHand->handSquarePoints = squarePoints;
+    } else {
+        leftHand->handSquarePoints = squarePoints;
+    }
+    
+    string hintText = string("Acopera dreptunghurile mici cu mana si apasa tasta 'S'");
+    printTextOnImage(image,hintText);
     
     for (int i = 0; i < squarePoints.size(); ++i) {
         squarePoints[i].draw_rectangle(image);
     }
-    //    Mat converted;
-    //    cvtColor(image, converted, COLORSPACE_TO);
-    imshow("Rectangle Image", image);
+    imshow(playingScreenName, image);
+    moveWindow(playingScreenName, 0, 0);
 }
 
 void printScalar(Scalar scalar, String title) {
@@ -127,16 +162,20 @@ void printScalar(Scalar scalar, String title) {
     cout <<"\n";
 }
 
-void computeMedianHandColor(Mat image) {
+void computeMedianHandColor(Mat image, bool isRightHand) {
     //Iterate through squares to get the median color from each square
     double rColor = 0.0;
     double gColor = 0.0;
     double bColor = 0.0;
     int count = 0;
-    
-    
-    
+    vector <Square> squarePoints;
+    if (isRightHand) {
+        squarePoints = rightHand->handSquarePoints;
+    } else {
+        squarePoints = leftHand->handSquarePoints;
+    }
     cvtColor(image, image, COLORSPACE_TO);
+    
     
     standardDeviationScalar = Scalar(0.0, 0.0, 0.0);
     for (int squareIndex = 0; squareIndex < squarePoints.size(); ++squareIndex) {
@@ -148,11 +187,7 @@ void computeMedianHandColor(Mat image) {
         Mat squareImage = image(sqaureRect);
         
         Scalar mean,dev;
-        
         meanStdDev(squareImage, mean, dev);
-        //        standardDeviationScalar[0] += mean[0];
-        //        standardDeviationScalar[1] += mean[1];
-        //        standardDeviationScalar[2] += mean[2];
         
         standardDeviationScalar[0] += dev[0];
         standardDeviationScalar[1] += dev[1];
@@ -160,6 +195,27 @@ void computeMedianHandColor(Mat image) {
         for (int i = upperLeftCorner.x; i < lowerLeftCorner.x; ++i) {
             for (int j = upperLeftCorner.y; j < lowerLeftCorner.y; ++j) {
                 Vec3b colour = image.at<Vec3b>(Point(i, j));
+                if (colour[0] < lowestColor[0]) {
+                    lowestColor[0] = colour[0];
+                }
+                if (colour[0] > heighestColor[0]) {
+                    heighestColor[0] = colour[0];
+                }
+                
+                if (colour[1] < lowestColor[1]) {
+                    lowestColor[1] = colour[1];
+                }
+                if (colour[1] > heighestColor[1]) {
+                    heighestColor[1] = colour[1];
+                }
+                
+                if (colour[2] < lowestColor[2]) {
+                    lowestColor[2] = colour[2];
+                }
+                if (colour[2] > heighestColor[2]) {
+                    heighestColor[2] = colour[2];
+                }
+                
                 rColor += colour[0];
                 gColor += colour[1];
                 bColor += colour[2];
@@ -175,9 +231,18 @@ void computeMedianHandColor(Mat image) {
     gColor /= count;
     bColor /= count;
     
-    Vec3b hls = Vec3b(rColor, gColor, bColor);
-    medianColor.push_back(hls);
+    Mat medianColorImage = Mat(10, 10, CV_8UC3, Scalar(rColor, gColor, bColor));
+    //    cvtColor(medianColorImage, medianColorImage, COLORSPACE_TO);
     
+    
+    Vec3b hls = Vec3b(rColor, gColor, bColor);
+    hls = medianColorImage.at<Vec3b>(0, 0);
+    vector <Vec3b> medianColor;
+    medianColor.push_back(hls);
+    handMedianColor = medianColor;
+    printScalar(Scalar(rColor, gColor, bColor), "MEDIAN COLOR ");
+    
+    //    imshow("Median color", medianColorImage);
     cvtColor(image, image, COLORSPACE_ORIG);
 }
 
@@ -187,74 +252,124 @@ void createROI(Mat frame) {
     roiFrame = frame(ROI);
     
     coloredRoiFrame = frame(ROI).clone();
-    imshow("coloredRoiFrame", coloredRoiFrame);
 }
 
-
-void initTrackbars() {
-    //    namedWindow(TRACKBARS_NAME, CV_WINDOW_FREERATIO);
-    //    createTrackbar("BinaryOffsetValue", TRACKBARS_NAME, &binarizationOffsetValue, 100);
-}
-
-void performBinarization() {
+Mat performBinarization(Mat image2, bool isRightHand) {
     Scalar lowerBoundColor = Scalar(0.0, 0.0, 0.0);
     Scalar upperBoundColor = Scalar(0.0, 0.0, 0.0);
+    cvtColor(image2, image2, COLORSPACE_TO);
+    //    imshow("colorspaceImage", image2);
+    Mat image;
+    if (isRightHand) {
+        image = image2(rightHand->handROI);
+        
+    } else {
+        image = image2(leftHand->handROI);
+    }
+    //        imshow("colorspaceImage2", image);
+    //    resize(image, image, Size(image2.rows, image2.cols));
     
-    cvtColor(roiFrame, roiFrame, COLORSPACE_TO);
-    //    Mat re;
-    //    cvtColor(originalImage.clone(), roiFrame, COLORSPACE_TO);
     
-    //    imshow("HSV", roiFrame);
-    imshow("ycrcb2", roiFrame);
+    //    imshow("Playing screen COLORSPACE_TO", image2);
     
-    hue = Mat(roiFrame.size(), CV_8U);
-    mixChannels(roiFrame, hue, {0, 0});
+    hue = Mat(image.size(), CV_8U);
+    mixChannels(image, hue, {0, 0});
     
-    sat = Mat(roiFrame.size(), CV_8U);
-    mixChannels(roiFrame, sat, {1, 0});
+    sat = Mat(image.size(), CV_8U);
+    mixChannels(image, sat, {1, 0});
     
-    Mat value = Mat(roiFrame.size(), CV_8U);
-    mixChannels(roiFrame, value, {2, 0});
+    Mat value = Mat(image.size(), CV_8U);
+    mixChannels(image, value, {2, 0});
     
+    //    equalizeHist(hue, hue);
+    //    equalizeHist(sat, sat);
+    //    equalizeHist(value, value);
     
     vector<Mat> bwFrameList;
-    float k = 4.5;
     
     for (int i = 0; i < NR_OF_SAMPLES;++i) {
+        lowerBoundColor[0] = handMedianColor[i][0] - colorEpsilon * standardDeviationScalar[0];
+        lowerBoundColor[1] = handMedianColor[i][1] - colorEpsilon * standardDeviationScalar[1];
+        lowerBoundColor[2] = handMedianColor[i][2] - colorEpsilon * standardDeviationScalar[2];
+        //        lowerBoundColor[1] = 77;
+        //        lowerBoundColor[2] = 137;
+        //        lowerBoundColor = lowestColor;
+        lowerBoundColor[2] = 0.0;
         
-        lowerBoundColor[0] = medianColor[i][0] - k * standardDeviationScalar[0];
-        lowerBoundColor[1] = medianColor[i][1] - k * standardDeviationScalar[1];
-        lowerBoundColor[2] = medianColor[i][2] - k*standardDeviationScalar[2];
-        lowerBoundColor[0] = 0.0;
-        
-
-        
-        upperBoundColor[0] = medianColor[i][0] + k*standardDeviationScalar[0];
-        upperBoundColor[1] = medianColor[i][1] + k*standardDeviationScalar[1];
-        upperBoundColor[2] = medianColor[i][2] + k*standardDeviationScalar[2];
-        upperBoundColor[0] = 0.0;
+        upperBoundColor[0] = handMedianColor[i][0] + colorEpsilon*standardDeviationScalar[0];
+        upperBoundColor[1] = handMedianColor[i][1] + colorEpsilon*standardDeviationScalar[1];
+        upperBoundColor[2] = handMedianColor[i][2] + colorEpsilon*standardDeviationScalar[2];
+        //        upperBoundColor[1] = 120;
+        //        upperBoundColor[2] = 160;
+        //        upperBoundColor = heighestColor;
+        upperBoundColor[2] = 255;
     }
-
+    //cout<< "COLORS: " << lowerBoundColor[0] << " " << lowerBoundColor[1] << " " <<  upperBoundColor[0] << " " << upperBoundColor[1] << " " << "\n";
+    //        cout<< "medianColor: " << medianColor[0][1] << " " << medianColor[0][2] << " " << "\n";
+    //    cout<< "standardDeviationScalar: " << standardDeviationScalar[1] << " " << standardDeviationScalar[2] << " " << "\n";
     
-    threshold(hue, hue, lowerBoundColor[0], upperBoundColor[0], CV_THRESH_OTSU);
-    threshold(sat, sat, lowerBoundColor[1], upperBoundColor[1], CV_THRESH_OTSU);
-    threshold(value, value, lowerBoundColor[2], upperBoundColor[2], CV_THRESH_OTSU);
+    if(lowerBoundColor[1] < 0) {
+        lowerBoundColor [1] = 0;
+    }
+    if(lowerBoundColor[2] < 0) {
+        lowerBoundColor [2] = 0;
+    }
     
+    if(upperBoundColor[2] > 255) {
+        upperBoundColor[2] = 255;
+    }
+    if(upperBoundColor[1] > 255) {
+        upperBoundColor[1] = 255;
+    }
+    //    cout<< "COLORS: " << lowerBoundColor[1] << " " << lowerBoundColor[2] << " " <<  upperBoundColor[1] << " " << upperBoundColor[2] << " " << "\n";
+    
+    //    threshold(hue, hue, lowerBoundColor[0], upperBoundColor[0], CV_THRESH_BINARY);
+    //    threshold(sat, sat, lowerBoundColor[1], upperBoundColor[1], CV_THRESH_BINARY);
+    //    threshold(value, value, lowerBoundColor[2], upperBoundColor[2], CV_THRESH_BINARY);
+    
+    inRange(hue, lowerBoundColor[0], upperBoundColor[0], hue);
     inRange(sat, lowerBoundColor[1], upperBoundColor[1], sat);
     inRange(value, lowerBoundColor[2], upperBoundColor[2], value);
-    bitwise_not(value, value);
     
-    //    Mat result;
-    //    vector<Mat> channels;
-    //    channels.push_back(hue);
-    //    channels.push_back(sat);
-    //    channels.push_back(value);
     //
-    //    merge(channels, roiFrame);
+    //    Mat image3 = image.clone();
+    ////    cvtColor(image3, image3, COLORSPACE_ORIG);
+    //imshow("imaggeeee", image3);
+    //    Scalar lower = Scalar(0,0,255);
+    //    Scalar upper = Scalar(360,0,255);
+    //
+    //    Mat mask;
+    //    inRange(image3 , lowerBoundColor, upperBoundColor, mask);
+    ////inRange(image3 , lower, upper, mask);
+    //    imshow("maskkkk", mask);
+    //    Mat res;
+    //    bitwise_and(image3, image3, res, mask);
+    //    imshow("andResult", res);
+    
+    
+    
+    
+    //
+    //
+    //        imshow("hue", hue);
+    //
+    //        imshow("sat", sat);
+    //
+    //        imshow("value", value);
+    
+    //    //    inRange(sat, lowerBoundColor[1], upperBoundColor[1], sat);
+    //    inRange(sat, lowerBoundColor[1], upperBoundColor[1], sat);
+    //    inRange(value, lowerBoundColor[2], upperBoundColor[2], value);
+    //    imshow("value", value);
+    //    bitwise_not(value, value);
+    //    imshow("notvalue", value);
+    
     
     Mat hueANDSat;
-    bitwise_or(sat, value, hueANDSat);
-    medianBlur(hueANDSat, roiFrame, 1);
+    bitwise_or(sat, sat, hueANDSat);
+    medianBlur(hueANDSat, image, 1);
+    
+    return image;
 }
 
 int findBiggestContour(vector<vector<Point> > contours) {
@@ -270,99 +385,7 @@ int findBiggestContour(vector<vector<Point> > contours) {
     return index;
 }
 
-Mat removeNoiseOutside(Mat workingImage, Rect rect) {
-    //Create a deep copy of the image
-    cv::Mat fill(workingImage.clone());
-    //Specify the ROI
-    cv::Mat fillROI = fill(rect);
-    //Fill the ROI with black
-    fillROI = cv::Scalar(0);
-    
-    //create a deep copy of the image
-    cv::Mat inverseFill(workingImage.clone());
-    //create a single-channel mask the same size as the image filled with 1
-    cv::Mat inverseMask(inverseFill.size(), CV_8UC1, cv::Scalar(1));
-    //Specify the ROI in the mask
-    cv::Mat inverseMaskROI = inverseMask(rect);
-    //Fill the mask's ROI with 0
-    inverseMaskROI = cv::Scalar(0);
-    //Set the image to 0 in places where the mask is 1
-    inverseFill.setTo(cv::Scalar(0), inverseMask);
-    
-    
-    workingHandImage = roiFrame(rect);
-    //    imshow("removeNoiseOutside", workingHandImage);
-    return workingHandImage;
-    
-}
-
 vector <Point> fingerTips;
-
-float distanceP2P(Point a, Point b){
-    float d= sqrt(fabs( pow(a.x-b.x,2) + pow(a.y-b.y,2) )) ;
-    return d;
-}
-
-
-int getAngleABC( Point a, Point b, Point c ) {
-    Point ab = { b.x - a.x, b.y - a.y };
-    Point cb = { b.x - c.x, b.y - c.y };
-    
-    float dot = (ab.x * cb.x + ab.y * cb.y); // dot product
-    float cross = (ab.x * cb.y - ab.y * cb.x); // cross product
-    
-    float alpha = atan2(cross, dot);
-    
-    return (int) floor(alpha * 180. / PI + 0.5);
-}
-
-void getFingerTips(Mat m, vector<Vec4i>  defects, vector<Point> biggestContour, Rect rect){
-    vector<Vec4i>::iterator d;
-    
-    fingerTips.clear();
-    int i=0;
-    d = defects.begin();
-    while( defects.size() > i && d!=defects.end() ) {
-        int startIdx = defects[i].val[0];
-        Point ptStart(biggestContour[startIdx]);
-        
-        int endIdx = defects[i].val[1];
-        Point ptEnd(biggestContour[endIdx]);
-        
-        int farIdx = defects[i].val[2];
-        Point ptFar(biggestContour[farIdx]);
-        
-        //        printf("defects: %d %d %d %d %d %d\n", ptStart.x, ptStart.y, ptEnd.x, ptEnd.y, ptFar.x, ptFar.y);
-        //        if(i == 0){
-        //            fingerTips.push_back(ptStart);
-        //            i++;
-        //        }
-        fingerTips.push_back(ptEnd);
-        d++;
-        i++;
-    }
-    //    printf("fingerTips: %lu \n", fingerTips.size());
-    //    if(fingerTips.size()==0){
-    //        checkForOneFinger(m);
-    //    }
-    
-    
-}
-
-bool detectIfHand(Mat image, Rect rect){
-    double h = rect.height;
-    double w = rect.width;
-    bool isHand=true;
-    if(fingerTips.size() > 5 ){
-        isHand=false;
-    }else if(h < 100 || w < 100){
-        isHand=false;
-    }
-    else if(h/w > 4 || w/h >4){
-        isHand=false;
-    }
-    return isHand;
-}
 
 string intToString(int number){
     stringstream ss;
@@ -371,95 +394,129 @@ string intToString(int number){
     return str;
 }
 
-void drawFingerTips(Mat workingImage) {
-    Point p;
-    printf("NUMBER OF FINGERS: %lu\n", fingerTips.size());
-    for(int i = 0;i < fingerTips.size(); i++){
-        p = fingerTips[i];
-        putText(workingImage,intToString(i),p-Point(0,30),1, 1.2f,Scalar(200,200,200),2);
-        circle(workingImage,p, 5, Scalar(100,255,100), 4 );
-        imshow("result", workingImage);
-    }
-}
-
-float innerAngle(float px1, float py1, float px2, float py2, float cx1, float cy1) {
-    
-    float dist1 = std::sqrt(  (px1-cx1)*(px1-cx1) + (py1-cy1)*(py1-cy1) );
-    float dist2 = std::sqrt(  (px2-cx1)*(px2-cx1) + (py2-cy1)*(py2-cy1) );
-    
-    float Ax, Ay;
-    float Bx, By;
-    float Cx, Cy;
-    
-    //find closest point to C
-    //printf("dist = %lf %lf\n", dist1, dist2);
-    
-    Cx = cx1;
-    Cy = cy1;
-    if(dist1 < dist2)
-    {
-        Bx = px1;
-        By = py1;
-        Ax = px2;
-        Ay = py2;
-        
-        
-    }else{
-        Bx = px2;
-        By = py2;
-        Ax = px1;
-        Ay = py1;
+int countNrOfFingers(int* histogram, String windowName, vector<Point> pointsOncircle, bool isRightHand, bool smallRadius){
+    int height = 100;
+    bool started = false;
+    bool multipleContinuousFingersDetected = false;
+    int nrOfContinuousHand = 0;
+    int nrOfFingers = 0;
+    float upThreshold = 28.0;
+    float multipleFingersThreshold = 18;
+    if (smallRadius) {
+        upThreshold -= 5;
     }
     
-    
-    float Q1 = Cx - Ax;
-    float Q2 = Cy - Ay;
-    float P1 = Bx - Ax;
-    float P2 = By - Ay;
+    vector<Point> detectedFingersPositions;
     
     
-    float A = std::acos( (P1*Q1 + P2*Q2) / ( std::sqrt(P1*P1+P2*P2) * std::sqrt(Q1*Q1+Q2*Q2) ) );
+    int startIndex = 0;
+    int finalIndex = 0;
+    int length = pointsOncircle.size();
     
-    A = A*180/CV_PI;
+    Mat histogramImage = Mat(height, length, CV_8UC3, CV_RGB(0, 0, 0));
     
-    return A;
-}
-
-void searchForDTCenter(Mat image) {
-    handDetectedCenterPoint = Point(0, 0);
-    int nrOfMaxPoints = 0;
-    float maximum = -1;
-    
-    
-    for (int i = handDetectedRect.x; i < handDetectedRect.x + handDetectedRect.width; ++i) {
-        for (int j = handDetectedRect.y; j < handDetectedRect.y + handDetectedRect.height; ++j) {
-            float colour = image.at<float>(Point(i, j));
-            if (colour > 0) {
-                if (colour > maximum) {
-                    maximum = colour;
-                    nrOfMaxPoints = 1;
-                    handDetectedCenterPoint = Point(i, j);
-                } else if (colour == maximum) {
-                    nrOfMaxPoints++;
-                    handDetectedCenterPoint.x += i;
-                    handDetectedCenterPoint.y += j;
-                }
+    for (int i = 0; i < length; ++i){
+        int limit = height / 2.0;
+        if (i < length - 1) {
+            if (started) {
+                nrOfContinuousHand++;
             }
+            if (histogram[i] != histogram[i + 1] && histogram[i + 1] != 0) {
+                started = true;
+                startIndex = i;
+            }
+            if (histogram[i] != histogram[i + 1] && histogram[i + 1] == 0) {
+                started = false;
+                
+                finalIndex = i;
+                //                cout<<"nrOfContinuousHand: "<<nrOfContinuousHand<< "\n";
+                
+                if (nrOfContinuousHand <= upThreshold && nrOfContinuousHand > 5.0) {
+                    nrOfFingers++;
+                    if (!smallRadius) {
+                        int midIndex = (startIndex + finalIndex) / 2.0;
+                        Point fingerPoint = pointsOncircle[midIndex];
+                        detectedFingersPositions.push_back(fingerPoint);
+                    }
+                    
+                } else if (nrOfContinuousHand >= multipleFingersThreshold && nrOfContinuousHand < multipleFingersThreshold*2 && !smallRadius) {
+                    
+                    int midIndex = (startIndex + finalIndex) / 3.0;
+                    Point fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    midIndex = 2.0 * (startIndex + finalIndex) / 3.0;
+                    fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    
+                    
+                    multipleContinuousFingersDetected = true;
+                    nrOfFingers+=2;
+                } else if (nrOfContinuousHand >= multipleFingersThreshold*2 && nrOfContinuousHand < multipleFingersThreshold*3 && !smallRadius) {
+                    int midIndex = (startIndex + finalIndex) / 4.0;
+                    Point fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    midIndex = 2.0 * (startIndex + finalIndex) / 4.0;
+                    fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    midIndex = 3.0 * (startIndex + finalIndex) / 4.0;
+                    fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    
+                    multipleContinuousFingersDetected = true;
+                    nrOfFingers+=3;
+                } else if (nrOfContinuousHand >= multipleFingersThreshold*3 && nrOfContinuousHand < multipleFingersThreshold*4 && !smallRadius) {
+                    int midIndex = (startIndex + finalIndex) / 5.0;
+                    Point fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    midIndex = 2.0 * (startIndex + finalIndex) / 5.0;
+                    fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    midIndex = 3.0 * (startIndex + finalIndex) / 5.0;
+                    fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    midIndex = 4.0 * (startIndex + finalIndex) / 5.0;
+                    fingerPoint = pointsOncircle[midIndex];
+                    detectedFingersPositions.push_back(fingerPoint);
+                    
+                    multipleContinuousFingersDetected = true;
+                    nrOfFingers+=4;
+                }
+                
+                nrOfContinuousHand = 0;
+                
+            }
+            
+        }
+        if (histogram[i] == 0) {
+            limit = 1;
+        }
+        Point p1 = Point(i, height);
+        Point p2 = Point(i, height - limit);
+        
+        line(histogramImage, p1, p2, CV_RGB(255, 0, 0));
+    }
+    //    if (!smallRadius) {
+    //        imshow(windowName, histogramImage);
+    //    }
+    
+    
+    
+    if (nrOfFingers > 5) {
+        return -1;
+    }
+    if (!smallRadius) {
+        if (isRightHand) {
+            rightHand->detectedFingersPositions = detectedFingersPositions;
+            rightHand->multipleContinuousFingersDetected = multipleContinuousFingersDetected;
+        } else {
+            leftHand->detectedFingersPositions = detectedFingersPositions;
+            leftHand->multipleContinuousFingersDetected = multipleContinuousFingersDetected;
         }
     }
-    
-    if (nrOfMaxPoints > 0) {
-        handDetectedCenterPoint.x /= nrOfMaxPoints;
-        handDetectedCenterPoint.y /= nrOfMaxPoints;
-    }
-    
-    circle(image, handDetectedCenterPoint, 5, Scalar(100,255,100), 3);
-    Mat colorImage = coloredRoiFrame.clone();
-    circle(colorImage, handDetectedCenterPoint, 5, Scalar(100,255,100), 3);
-    //    imshow("DT center", colorImage);
+    return nrOfFingers;
 }
 
-int displayHistogramArray(int* histogram, String windowName, int length, bool rightHand, bool smallRadius){
+int displayHistogramArray(int* histogram, String windowName, int length, bool isRightHand, bool smallRadius){
     int height = 100;
     Mat histogramImage = Mat(height, length, CV_8UC3, CV_RGB(0, 0, 0));
     bool started = false;
@@ -477,8 +534,8 @@ int displayHistogramArray(int* histogram, String windowName, int length, bool ri
             }
             if (histogram[i] != histogram[i + 1] && histogram[i + 1] == 0) {
                 started = false;
-                cout<<"nrOfContinuousHand: " << nrOfContinuousHand << "\n";
-                if (nrOfContinuousHand < 30.0 && nrOfContinuousHand > 5) {
+                //                cout<<"nrOfContinuousHand: " << nrOfContinuousHand << "\n";
+                if (nrOfContinuousHand < 30.0 && nrOfContinuousHand > 5.0) {
                     nrOfFingers++;
                 }
                 nrOfContinuousHand = 0;
@@ -504,83 +561,11 @@ int displayHistogramArray(int* histogram, String windowName, int length, bool ri
     return nrOfFingers;
 }
 
-int findNumberOfFingers(Mat image, int radius) {
-    Size axes (radius,radius);
-    vector<Point> pointsOnCircle;
-    
-    
-    
-    
-    Mat circleImage = image.clone();
-    circle(circleImage, handDetectedCenterPoint, radius, Scalar(100,255,100), 1);
-    
-    
-    
-    
-    ellipse2Poly(handDetectedCenterPoint, axes, 0, 0, 360, 1, pointsOnCircle);
-    int histogramArray[pointsOnCircle.size()];
-    for (int i = 0; i < pointsOnCircle.size(); ++i) {
-        
-        Point currentPoint = pointsOnCircle[i];
-        if (i == 0) {
-            circle(circleImage, currentPoint, 10, Scalar(100,255,100), 1);
-        }
-        if (i == 20) {
-            circle(circleImage, currentPoint, 20, Scalar(100,255,100), 1);
-        }
-        
-        histogramArray[i] = -1.0;
-        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
-            int colour = image.at<uchar>(currentPoint);
-            histogramArray[i] = colour;
-        }
-    }
-    imshow("createdCircle", circleImage);
-    
-    return    displayHistogramArray(histogramArray, "histogramArray",(int)pointsOnCircle.size(), true, false);
-    //    int nrOfFingers = 0;
-    //    for (int i = 0; i < pointsOnCircle.size() - 1; ++i) {
-    //        if (histogramArray[i] != histogramArray[i + 1] && histogramArray[i + 1] != 0) {
-    //            nrOfFingers++;
-    //        }
-    //    }
-    
-    //    return nrOfFingers;
-}
-
-void findOuterCircle(Mat image) {
-    float width = handDetectedRect.width;
-    int radius = width / 2.0;
-    int maxRadius = radius;
-    for (;radius <= maxRadius; ++radius) {
-        int nrOfFingers = findNumberOfFingers(image, radius);
-        cout<< " " << nrOfFingers << " ";
-    }
-    cout<< "\n";
-}
-
-void drawROIS(Mat image) {
-    ROISize = Size(capS.width, capS.height);
-    
-    float xDistance = 10.0;
-    float yDivisor = 5.0;
-    float widthDivisor = 2.0;
-    float heightDivisor = 3.0;
-    
-    leftROI = Rect(xDistance, ROISize.height / yDivisor, ROISize.height / widthDivisor, ROISize.width / heightDivisor);
-    rightROI = Rect((ROISize.width - xDistance) - ROISize.height / widthDivisor, ROISize.height / yDivisor, ROISize.height / widthDivisor, ROISize.width / heightDivisor);
-    
-    rectangle(image, leftROI, Scalar(123.0, 10.0, 150.0));
-    rectangle(image, rightROI, Scalar(123.0, 10.0, 150.0));
-    imshow("ROIS", image);
-}
-
 void extractImages(Mat image) {
-    leftImage = image(leftROI);
-    rightImage = image(rightROI);
-    imshow("leftImage", leftImage);
-    imshow("rightImage", rightImage);
-    
+    leftHand->handImage = image(leftHand->handROI);
+    rightHand->handImage = image(rightHand->handROI);
+    //    imshow("leftImage", leftImage);
+    //    imshow("rightImage", rightImage);
 }
 
 Mat filterImage(Mat image) {
@@ -616,20 +601,7 @@ Mat filterImage(Mat image) {
     return filteredImage;
 }
 
-float findTheRadius(Mat image, bool rightHand, vector<Point> contours) {
-    float distance = -1;
-    for (int i = 0; i < contours.size(); ++i) {
-        Point point = contours[i];
-        if (distanceP2P(point, rightHandDetectedCenterPoint) < distance || distance == -1 ) {
-            distance = distanceP2P(point, rightHandDetectedCenterPoint);
-        }
-    }
-    cout<< "FOUND radius: "<< distance << "\n";
-    return distance;
-    
-}
-
-void findBiggestContourAndFillIt(Mat image, bool rightHand) {
+void findBiggestContourAndFillIt(Mat image, bool isRightHand) {
     Mat bluredImage = image.clone();
     
     GaussianBlur(bluredImage, bluredImage, Size(0, 0), 1);
@@ -659,7 +631,11 @@ void findBiggestContourAndFillIt(Mat image, bool rightHand) {
         convexHull(Mat(biggestContour), hullPoints, false, true);
         convexHull(Mat(biggestContour), hullI, false, false);
         approxPolyDP(Mat(hullPoints), hullPoints, 1, true);
-        hullPointsRightHand = hullPoints;
+        if (isRightHand) {
+            rightHand->handHullPoints = hullPoints;
+        } else {
+            leftHand->handHullPoints = hullPoints;
+        }
         Mat allContoursImage = image.clone();
         
         Scalar color = Scalar( 255.0, 25.0, 10.0);
@@ -679,19 +655,47 @@ void findBiggestContourAndFillIt(Mat image, bool rightHand) {
         
         //Fill the contours to have a filled hand
         drawContours(filledContours, vector2, 0, color, -1);
-        
-        imshow("All Contours", allContoursImage);
-        imshow("Filled Contours", filledContours);
-        
-        if (rightHand) {
-            rightHandDetectedRect = handDetectedRect;
-            rightImageFilledContours = filledContours;
-            rightHandBiggestContour = biggestContour;
+        //        imshow("allcotnus", allContoursImage);
+        //        imshow("filledContours", filledContours);
+        if (isRightHand) {
+            rightHand->handDetectedRect = handDetectedRect;
+            rightHand->originalHandDetectedRect = handDetectedRect;
+            rightHand->handImageFilledContours = filledContours;
+            rightHand->handBiggestContour = biggestContour;
         } else {
-            leftHandDetectedRect = handDetectedRect;
-            leftImageFilledContours = filledContours;
-            leftHandBiggestContour = biggestContour;
+            leftHand->handDetectedRect = handDetectedRect;
+            leftHand->originalHandDetectedRect = handDetectedRect;
+            leftHand->handImageFilledContours = filledContours;
+            leftHand->handBiggestContour = biggestContour;
         }
+        for (int i = 0; i < image.rows; ++i) {
+            if (handDetectedRect.y + 10 < image.cols) {
+                Point currentPoint = Point(i, handDetectedRect.y + 10);
+                if (image.at<uchar>(currentPoint) != 0) {
+                    if (isRightHand) {
+                        rightHand->topMostHandFinger = currentPoint;
+                    } else {
+                        leftHand->topMostHandFinger = currentPoint;
+                    }
+                    break;
+                }
+            }
+        }
+    } else {
+        vector<Point> biggestContour;
+        biggestContour.push_back(Point(0, 0));
+        if (isRightHand) {
+            rightHand->handDetectedRect = handDetectedRect;
+            rightHand->originalHandDetectedRect = handDetectedRect;
+            rightHand->handImageFilledContours = Mat();
+            rightHand->handBiggestContour = biggestContour;
+        } else {
+            leftHand->handDetectedRect = handDetectedRect;
+            leftHand->originalHandDetectedRect = handDetectedRect;
+            leftHand->handImageFilledContours = Mat();
+            leftHand->handBiggestContour = biggestContour;
+        }
+        
     }
 }
 
@@ -699,53 +703,19 @@ Mat computeDistanceTransform(Mat image) {
     Mat DT;
     distanceTransform(image.clone(), DT, CV_DIST_L2, 3);
     
-    // Normalize the distance image for range = {0.0, 1.0}
-    // so we can visualize and threshold it
     normalize(DT, DT, 0, 1., NORM_MINMAX);
     
     return DT;
 }
 
-void findCentroid(Mat image, bool rightHand) {
-    if (rightHand) {
-        handDetectedRect = rightHandDetectedRect;
-    } else {
-        handDetectedRect = leftHandDetectedRect;
-    }
-    int x = 0;
-    int y = 0;
-    int nrOfHandPixels = 0;
-    
-    for (int i = handDetectedRect.x; i < handDetectedRect.x + handDetectedRect.width; ++i) {
-        for (int j = handDetectedRect.y; j < handDetectedRect.y + handDetectedRect.height; ++j) {
-            float colour = image.at<float>(Point(i, j));
-            if (colour > 0) {
-                x+=i;
-                y+=j;
-                nrOfHandPixels++;
-            }
-        }
-    }
-    if (nrOfHandPixels == 0) {
-        nrOfHandPixels = 1;
-    }
-    x /= nrOfHandPixels;
-    y /= nrOfHandPixels;
-    if (rightHand) {
-        rightHandCentroidPoint = Point(x, y);
-    } else {
-        leftHandCentroidPoint = Point(x, y);
-    }
-}
-
-void findDTCenter(Mat image, bool rightHand) {
+void findDTCenter(Mat image, bool isRightHand) {
     handDetectedCenterPoint = Point(0, 0);
     int nrOfMaxPoints = 0;
     float maximum = -1;
-    if (rightHand) {
-        handDetectedRect = rightHandDetectedRect;
+    if (isRightHand) {
+        handDetectedRect = rightHand->handDetectedRect;
     } else {
-        handDetectedRect = leftHandDetectedRect;
+        handDetectedRect = leftHand->handDetectedRect;
     }
     for (int i = handDetectedRect.x; i < handDetectedRect.x + handDetectedRect.width; ++i) {
         for (int j = handDetectedRect.y; j < handDetectedRect.y + handDetectedRect.height; ++j) {
@@ -769,83 +739,14 @@ void findDTCenter(Mat image, bool rightHand) {
         handDetectedCenterPoint.y /= nrOfMaxPoints;
     }
     
-    if (rightHand) {
-        rightHandDetectedCenterPoint = handDetectedCenterPoint;
+    if (isRightHand) {
+        rightHand->handDetectedCenterPoint = handDetectedCenterPoint;
     } else {
-        leftHandDetectedCenterPoint = handDetectedCenterPoint;
+        leftHand->handDetectedCenterPoint = handDetectedCenterPoint;
     }
 }
 
-void computeHistogramFromWrist(Mat image, Point wristMedianPoint, bool rightHand) {
-    
-    
-    //    Point p1 = Point(0, wristMedianPoint.y);
-    //    Point p2 = Point(image.rows, wristMedianPoint.y);
-    //    Rect bottomWristRect = cvRect(0, 0, image.cols, wristMedianPoint.y);
-    //    Mat withoutWristImage = image(bottomWristRect);
-    //    imshow("withoutWristImage", withoutWristImage);
-    
-    
-    int histogramArray[rightHandBiggestContour.size()];
-    float maxDistance = 0;
-    float biggestDistance = 0;
-    Point maxDistancePoint = Point(0,0);
-    for (int i = 0; i < rightHandBiggestContour.size(); ++i) {
-        Point currentPoint = rightHandBiggestContour[i];
-        
-        histogramArray[i] = 0.0;
-        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
-            if (currentPoint.y < wristMedianPoint.y) {
-                float distance = distanceP2P(currentPoint, wristMedianPoint);
-                histogramArray[i] = distance;
-                if (distance > maxDistance) {
-                    maxDistancePoint = currentPoint;
-                    maxDistance = distance;
-                }
-                distance = distanceP2P(currentPoint, rightHandDetectedCenterPoint);
-                if (distance > biggestDistance) {
-                    biggestDistance = distance;
-                }
-                
-                
-                
-                circle(image, currentPoint, 5, Scalar(100,255,100), 1);
-            }
-        }
-    }
-    
-    
-    
-    cout<<"Max distance: "<< maxDistance << "\n";
-    
-    float startUpPosition;
-    float medianDistanceValue = 0;
-    Mat histogramImage = Mat(maxDistance, rightHandBiggestContour.size(), CV_8UC3, CV_RGB(0, 0, 0));
-    for (int i = 0; i < rightHandBiggestContour.size(); ++i) {
-        float distance = histogramArray[i];
-        medianDistanceValue += distance;
-        Point p1 = Point(i, maxDistance - distance);
-        Point p2 = Point(i, maxDistance);
-        
-        line(histogramImage, p1, p2, CV_RGB(255, 0, 0));
-    }
-    
-    medianDistanceValue /= rightHandBiggestContour.size();
-    cout<<" medianDistanceValue: "<< medianDistanceValue << "\n";
-    Point p1 = Point(0, medianDistanceValue);
-    Point p2 = Point(rightHandBiggestContour.size(), medianDistanceValue);
-    
-    line(histogramImage, p1, p2, CV_RGB(255, 255, 0));
-    if (histogramImage.data) {
-        imshow("histogram wrist", histogramImage);
-    }
-    
-    
-    //    return histogramArray;
-}
-
-
-Point getMedianWristPoint(Mat image, float radius, bool rightHand) {
+Point getMedianWristPoint(Mat image, float radius, bool isRightHand) {
     bool started = false;
     Point startingPoint = Point(0, 0);
     Point tempStartingPoint = Point(0, 0);
@@ -856,8 +757,14 @@ Point getMedianWristPoint(Mat image, float radius, bool rightHand) {
     
     Size axes = Size(radius, radius);
     vector<Point> pointsOnCircle;
+    Point centerPoint = Point(0, 0);
+    if (isRightHand) {
+        centerPoint = rightHand->handDetectedCenterPoint;
+    } else {
+        centerPoint = leftHand->handDetectedCenterPoint;
+    }
+    ellipse2Poly(centerPoint, axes, 0, 0, 180, 1, pointsOnCircle);
     
-    ellipse2Poly(rightHandDetectedCenterPoint, axes, 0, 0, 180, 1, pointsOnCircle);
     Mat imageClone = image.clone();
     
     for (int i = 0; i < pointsOnCircle.size() - 1; ++i) {
@@ -869,7 +776,7 @@ Point getMedianWristPoint(Mat image, float radius, bool rightHand) {
         if (started) {
             nrOfContinuousHand++;
         }
-        if (currentPoint.x < image.cols) {            
+        if (currentPoint.x < image.cols) {
             if (!started) {
                 if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
                     if (nextPoint.y < image.rows && nextPoint.x < image.cols && nextPoint.x > 0 && nextPoint.y > 0) {
@@ -921,7 +828,7 @@ Point getMedianWristPoint(Mat image, float radius, bool rightHand) {
     if (endingPoint.y < 0) {
         endingPoint.y = 100;
     }
-
+    
     
     if (startingPoint.x > image.rows) {
         startingPoint.x = image.rows;
@@ -936,48 +843,60 @@ Point getMedianWristPoint(Mat image, float radius, bool rightHand) {
     if (endingPoint.y > image.cols) {
         endingPoint.y = image.cols;
     }
-
-    Point medianPoint = Point((startingPoint.x + endingPoint.x) / 2.0, (startingPoint.y + endingPoint.y) / 2.0);
     
+    Point medianPoint = Point((startingPoint.x + endingPoint.x) / 2.0, (startingPoint.y + endingPoint.y) / 2.0);
     
     circle(imageClone, startingPoint, 10, Scalar(100,255,100), 1);
     circle(imageClone, endingPoint, 20, Scalar(100,255,100), 1);
     circle(imageClone, medianPoint, 30, Scalar(100,255,100), 1);
-    imshow("wristCircles2", imageClone);
-    
     
     return medianPoint;
 }
 
-bool checkForZeroFingers(Mat image, bool rightHand) {
-    float hullArea = contourArea(hullPointsRightHand);
-    float hullAreaWhite = contourArea(rightHandBiggestContour);
+bool checkForZeroFingers(Mat image, bool isRightHand) {
+    float hullArea = 0;
+    float hullAreaWhite = 0;
+    
+    if (isRightHand) {
+        hullArea = contourArea(rightHand->handHullPoints);
+        hullAreaWhite = contourArea(rightHand->handBiggestContour);
+    } else {
+        if (leftHand->handHullPoints.size() == 0) {
+            leftHand->handHullPoints.push_back(Point(0, 0));
+        }
+        if (leftHand->handBiggestContour.size() == 0) {
+            leftHand->handBiggestContour.push_back(Point(0, 0));
+        }
+        hullArea = contourArea(leftHand->handHullPoints);
+        hullAreaWhite = contourArea(leftHand->handBiggestContour);
+        
+    }
     
     float precentage =  100 * hullAreaWhite / hullArea;
-    cout << "precentage: " << 100 * hullAreaWhite / hullArea<< "\n";
-    if (precentage > 90.0) {
+    //    cout<<"precentage: "<<precentage<<"\n";
+    if (precentage > 86.0) {
         return true;
-        cout << "FOUND ZERO FINGERS ****************************************************************************************************************************************************************" << "\n";
+        
     }
     return false;
 }
 
 
 
-void createPalmCircle(Mat image, bool rightHand) {
+void createPalmCircle(Mat image, bool isRightHand) {
     Point handCenter;
     float radius = 0.0;
     Rect handDetectedRect;
-    if (rightHand) {
-        handCenter = rightHandDetectedCenterPoint;
-        handCenter = rightHandDetectedCenterPoint;
-        radius = 0.3 * (rightHandDetectedRect.width + rightHandDetectedRect.height);
-        handDetectedRect = rightHandDetectedRect;
+    if (isRightHand) {
+        handCenter = rightHand->handDetectedCenterPoint;
+        handCenter = rightHand->handDetectedCenterPoint;
+        radius = 0.3 * (rightHand->handDetectedRect.width + rightHand->handDetectedRect.height);
+        handDetectedRect = rightHand->handDetectedRect;
     } else {
-        handCenter = leftHandDetectedCenterPoint;
-        handCenter = leftHandCentroidPoint;
-        radius = 0.3 * (leftHandDetectedRect.width + rightHandDetectedRect.height);
-        handDetectedRect = leftHandDetectedRect;
+        handCenter = leftHand->handDetectedCenterPoint;
+        handCenter = leftHand->handDetectedCenterPoint;
+        radius = 0.3 * (leftHand->handDetectedRect.width + rightHand->handDetectedRect.height);
+        handDetectedRect = leftHand->handDetectedRect;
     }
     
     Point leftTopPoint = Point(handDetectedRect.x, handDetectedRect.y);
@@ -993,83 +912,28 @@ void createPalmCircle(Mat image, bool rightHand) {
     
     
     Mat circleImage = image.clone();
-    radius = biggestDistance * 0.6;
-    
-    circle(circleImage, handCenter, radius, Scalar(100,255,100), 1);
-    
+    radius = biggestDistance * 0.55;
     float smallRadius = biggestDistance * 0.5;
-    circle(circleImage, handCenter, smallRadius, Scalar(100,255,100), 1);
-    float midRadius = (radius + smallRadius) / 2.0;
     
     
-
-    Mat im_mask= image.clone();
-    im_mask.setTo(Scalar(0,0,0));
-    circle(im_mask, handCenter, smallRadius, Scalar(255,255,255), -1, 8, 0);
-    bitwise_not(im_mask, im_mask);
-    Mat copyCreatedCircle;
-    
-    bitwise_and(image.clone(), im_mask, circleImage);
-    imshow("removed  palm mask", image);
+    //    Mat im_mask= image.clone();
+    //    im_mask.setTo(Scalar(0,0,0));
+    //    circle(im_mask, handCenter, smallRadius, Scalar(255,255,255), -1, 8, 0);
+    //    bitwise_not(im_mask, im_mask);
+    //
+    //    bitwise_and(image.clone(), im_mask, circleImage);
     circle(circleImage, handCenter, radius, Scalar(100,255,100), 1);
-
     circle(circleImage, handCenter, smallRadius, Scalar(100,255,100), 1);
-    imshow("createdCircle", circleImage);
     
     vector<Point> biggestContour;
-    if (rightHand) {
-        biggestContour = rightHandBiggestContour;
+    if (isRightHand) {
+        biggestContour = rightHand->handBiggestContour;
     } else {
-        biggestContour = leftHandBiggestContour;
+        biggestContour = leftHand->handBiggestContour;
     }
     
-    int maxY = 0;
-    vector<int> xArray;
-    vector<int> yArray;
-    for (int i = 0; i< biggestContour.size(); ++i) {
-        Point p = biggestContour[i];
-        xArray.push_back(p.x);
-        yArray.push_back(p.y);
-        if (p.y > maxY) {
-            maxY = p.y;
-        }
-    }
     
-    int height = maxY;
     int length = biggestContour.size();
-    Mat histogramImage = Mat(height, length, CV_8UC3, CV_RGB(0, 0, 0));
-    
-    
-    
-    for (int i = 0; i < length; ++i){
-        float yValue = yArray[i];
-        Point p1 = Point(i, height);
-        Point p2 = Point(i, height - yValue);
-        
-        line(histogramImage, p1, p2, CV_RGB(255, 0, 0));
-    }
-    
-    //    imshow("histogram", histogramImage);
-    
-    //Normalize the histogram
-    for (int i = 0; i < length; ++i){
-        yArray[i] /= maxY;
-    }
-    height /= maxY;
-    Mat histogramImage2 = Mat(height, length, CV_8UC3, CV_RGB(0, 0, 0));
-    
-    for (int i = 0; i < length; ++i){
-        float yValue = yArray[i];
-        
-        Point p1 = Point(i, height);
-        Point p2 = Point(i, height - yValue);
-        
-        line(histogramImage2, p1, p2, CV_RGB(255, 0, 0));
-    }
-    imshow("histogram2", histogramImage2);
-    
-    
-    
     
     Size axes (radius,radius);
     vector<Point> pointsOnCircle;
@@ -1088,13 +952,32 @@ void createPalmCircle(Mat image, bool rightHand) {
         }
     }
     
+    int startIndex = -1;
+    int finalIndex = -1;
+    for (int i = 0; i < pointsOnCircle.size() / 2.0; ++i) {
+        if ((histogramArray[i] > 0 || pointsOnCircle[i].y > image.rows) && startIndex == -1) {
+            startIndex = i;
+        } else if (histogramArray[i] == 0){
+            if (startIndex != 0) {
+                finalIndex = i;
+            }
+        }
+    }
+    int wristIndex = (startIndex + finalIndex) / 2.0;
+    Point wristMidPoint = pointsOnCircle[wristIndex];
     
-    int nrOfFingersBigRadius = displayHistogramArray(histogramArray, "histogramRadius", pointsOnCircle.size(), true, false);
+    if (finalIndex - startIndex > 20) {
+        for (int i = startIndex; i < finalIndex; ++i) {
+            histogramArray[i] = 0;
+        }
+        
+    }
     
     
     
     
     
+    int nrOfFingersBigRadius = countNrOfFingers(histogramArray, "histogramRadius", pointsOnCircle, isRightHand, false);
     
     axes = Size(smallRadius,smallRadius);
     pointsOnCircle.clear();
@@ -1114,57 +997,202 @@ void createPalmCircle(Mat image, bool rightHand) {
     }
     
     
-    int nrOfFingersSmallRadius = displayHistogramArray(histogramArray2, "histogramRadius2", pointsOnCircle.size(), true, true);
+    startIndex = -1;
+    finalIndex = -1;
+    for (int i = 0; i < pointsOnCircle.size() / 2.0; ++i) {
+        if ((histogramArray[i] > 0 || pointsOnCircle[i].y > image.rows) && startIndex == -1) {
+            startIndex = i;
+        } else if (histogramArray[i] == 0){
+            if (startIndex != 0) {
+                finalIndex = i;
+            }
+        }
+    }
+    wristIndex = (startIndex + finalIndex) / 2.0;
+    wristMidPoint = pointsOnCircle[wristIndex];
+    
+    if (finalIndex - startIndex > 20) {
+        for (int i = startIndex; i < finalIndex; ++i) {
+            histogramArray[i] = 0;
+        }
+        
+    }
     
     
+    
+    
+    
+    
+    
+    int nrOfFingersSmallRadius = countNrOfFingers(histogramArray2, "histogramRadius2", pointsOnCircle, isRightHand, true);
     
     rectangle(circleImage, Point(0.0, 0.0), Point(image.cols, 30.0), Scalar(255.0, 255.0, 255.0), -1);
-    
-    
     putText(circleImage,to_string(nrOfFingersSmallRadius),Point(0.0, 20.0),1, 1.2f,Scalar(0.0, 0.0, 0.0),2);
     putText(circleImage,to_string(nrOfFingersBigRadius),Point(100.0, 20.0),1, 1.2f,Scalar(150.0, 0.0, 0.0),2);
     
-    
-    bool zeroFinger = checkForZeroFingers(image.clone(), rightHand);
-
+    bool zeroFinger = checkForZeroFingers(image.clone(), isRightHand);
     
     int nrOfFingers = 0;
-    if (zeroFinger) {
+    Point centerPoint = Point(0, 0);
+    Point topMostPoint = Point(0, 0);
+    Rect rect = Rect();
+    bool multipleContinuousFingersDetected = false;
+    
+    if (isRightHand) {
+        centerPoint = rightHand->handDetectedCenterPoint;
+        topMostPoint = rightHand->topMostHandFinger;
+        rect = rightHand->handDetectedRect;
+        multipleContinuousFingersDetected = rightHand->multipleContinuousFingersDetected;
+        
+    } else {
+        centerPoint = leftHand->handDetectedCenterPoint;
+        topMostPoint = leftHand->topMostHandFinger;
+        rect = leftHand->handDetectedRect;
+        multipleContinuousFingersDetected = leftHand->multipleContinuousFingersDetected;
+    }
+    
+    if (zeroFinger && !multipleContinuousFingersDetected) {
         nrOfFingers = 0;
-    } else if (nrOfFingersSmallRadius == 1) {
-        nrOfFingers = 1;
-    } else if (nrOfFingersSmallRadius == 5){
-        nrOfFingers = 5;
     } else {
         nrOfFingers = nrOfFingersBigRadius;
+        if (nrOfFingersSmallRadius == 5 && nrOfFingersBigRadius == 4) {
+            nrOfFingers = 5;
+        }
     }
     putText(circleImage,to_string(nrOfFingers),Point(200.0, 20.0),1, 1.2f,Scalar(150.0, 100.0, 230.0),2);
+    
+    if (isRightHand) {
+        rightHand->nrOfFingers = nrOfFingers;
+//        imshow("Right Hand", circleImage);
+    } else {
+        leftHand->nrOfFingers = nrOfFingers;
+//        imshow("Left Hand", circleImage);
+    }
+}
 
+void removeWrist(Mat image, bool isRightHand) {
+    float smallestDistance = 0;
+    Point minDistancePoint = Point(0,0);
+    vector<Point> biggestContour;
+    Point center = Point(0, 0);
+    if (isRightHand) {
+        biggestContour = rightHand->handBiggestContour;
+        center = rightHand->handDetectedCenterPoint;
+    } else {
+        biggestContour = leftHand->handBiggestContour;
+        center = leftHand->handDetectedCenterPoint;
+    }
+    
+    
+    for (int i = 0; i < biggestContour.size(); ++i) {
+        Point currentPoint = biggestContour[i];
+        
+        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
+            if (currentPoint.y > center.y) {
+                float distance = distanceP2P(currentPoint, center);
+                if (distance < smallestDistance || smallestDistance == 0) {
+                    minDistancePoint = currentPoint;
+                    smallestDistance = distance;
+                }
+            }
+        }
+    }
+    
+    Size axes = Size(smallestDistance, smallestDistance);
+    vector<Point> pointsOnCircle;
+    
+    ellipse2Poly(center, axes, 0, 0, 360, 1, pointsOnCircle);
+    Point smallestPoint = Point(0, 0);
+    for (int i = 0; i < pointsOnCircle.size() - 1; ++i) {
+        Point currentPoint = pointsOnCircle[i];
+        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
+            if (smallestPoint.y < currentPoint.y) {
+                smallestPoint = currentPoint;
+            }
+        }
+    }
+    
+    
+    Point medianPoint = getMedianWristPoint(image.clone(), smallestDistance, isRightHand);
+    medianPoint = smallestPoint;
+    
+    Rect bottomWristRect = cvRect(0, medianPoint.y, image.cols, image.rows - medianPoint.y);
+    if (isRightHand) {
+        rightHand->handDetectedRect.height -= bottomWristRect.height;
+    } else {
+        leftHand->handDetectedRect.height -= bottomWristRect.height;
+    }
+    Mat wholeImage = Mat(image.rows, image.cols, CV_8UC1, Scalar(255,255,255));
+    wholeImage(bottomWristRect) = 0.0;
+    
+    bitwise_and(wholeImage, image, image);
+}
+
+void drawROIS(Mat image) {
+    ROISize = Size(capS.width, capS.height);
+    
+    float xDistance = 10.0;
+    float yDivisor = 5.0;
+    float widthDivisor = 2.0;
+    float heightDivisor = 3.0;
+    
+    leftHand->handROI = Rect(xDistance, ROISize.height / yDivisor, ROISize.height / widthDivisor, ROISize.width / heightDivisor);
+    rightHand->handROI = Rect((ROISize.width - xDistance) - ROISize.height / widthDivisor, ROISize.height / yDivisor, ROISize.height / widthDivisor, ROISize.width / heightDivisor);
     
     
     
-    
-    
-    imshow("createdCircle", circleImage);
+    rectangle(image, leftHand->handROI, currentLeftRectColor);
+    rectangle(image, rightHand->handROI, currentRightRectColor);
 }
 
 void test(Mat image) {
+    
     cvtColor(image, image, COLORSPACE_TO);
+    //    //    cvtColor(image3, image3, COLORSPACE_ORIG);
+    //    imshow("imaggeeee", image);
+    //    Scalar lower = Scalar(0,0,240);
+    //    Scalar upper = Scalar(180,255,255);
+    //
+    //    Mat mask;
+    //    inRange(image , lower, upper, mask);
+    //
+    //    imshow("maskkkk", mask);
+    //    Mat res;
+    //    bitwise_and(image, image, res, mask);
+    //    imshow("andResult", res);
+    //    Mat lower_red_hue_range;
+    //    inRange(image, Scalar(0, 0, 0), Scalar(180, 255, 10), lower_red_hue_range);
+    //    imshow("ACI", lower_red_hue_range);
+    //    inRange(image, Scalar(160, 100, 100), ScalarScalar(179, 255, 255), upper_red_hue_range);
+    
+    
+    
+    
     imshow("ycrcb", image);
     
     Mat hue = Mat(image.size(), CV_8U);
-    
-    
     mixChannels(image, hue, {0, 0});
-    
+    //    equalizeHist(hue, hue);
     Mat sat = Mat(image.size(), CV_8U);
     mixChannels(image, sat, {1, 0});
-    
+    //    equalizeHist(sat, sat);
     Mat value = Mat(image.size(), CV_8U);
     mixChannels(image, value, {2, 0});
+    //    equalizeHist(value, value);
+    //    imshow("hue1", hue);
+    //
+    //    imshow("sat1", sat);
+    //
+    //    imshow("value1", value);
+    
     threshold(hue, hue, 0, 0, CV_THRESH_OTSU);
     threshold(sat, sat, 77, 120, CV_THRESH_OTSU);
     threshold(value, value, 137, 163, CV_THRESH_OTSU);
+    
+    equalizeHist(hue, hue);
+    equalizeHist(sat, sat);
+    equalizeHist(value, value);
+    
     imshow("hue", hue);
     
     imshow("sat", sat);
@@ -1181,226 +1209,362 @@ void test(Mat image) {
     imshow("RESULT", result);
 }
 
-void removeWrist(Mat image, bool rightHand) {
-    float smallestDistance = 1000000;
-    Point minDistancePoint = Point(0,0);
-    for (int i = 0; i < rightHandBiggestContour.size(); ++i) {
-        Point currentPoint = rightHandBiggestContour[i];
+Mat addImagesToExercise(Rect exercisesRect, float nrOfElements, Mat image) {
+    int containerImageWidth = exercisesRect.width;
+    int containerImageHeight = exercisesRect.height;
+    if (nrOfElements > 0) {
         
-        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
-            if (currentPoint.y < rightHandDetectedCenterPoint.y) {
-                float distance = distanceP2P(currentPoint, rightHandDetectedCenterPoint);
-                if (distance < smallestDistance) {
-                    minDistancePoint = currentPoint;
-                    smallestDistance = distance;
-                }
-            }
+        int imageWidth = containerImageWidth / ((nrOfElements + 1) / 2.0);
+        if (nrOfElements == 1) {
+            imageWidth = containerImageWidth / 2.0;
         }
-    }
-    
-    Size axes = Size(smallestDistance, smallestDistance);
-    vector<Point> pointsOnCircle;
-    
-    ellipse2Poly(rightHandDetectedCenterPoint, axes, 0, 0, 360, 1, pointsOnCircle);
-    Point smallestPoint = Point(0, 0);
-    for (int i = 0; i < pointsOnCircle.size() - 1; ++i) {
-        Point currentPoint = pointsOnCircle[i];
-        if (currentPoint.y < image.rows && currentPoint.x < image.cols && currentPoint.x > 0 && currentPoint.y > 0) {
-            if (smallestPoint.y < currentPoint.y) {
-                smallestPoint = currentPoint;
+        int imageHeight = containerImageHeight / 2;
+        Mat containerImage = Mat(containerImageHeight, containerImageWidth, CV_8UC3, Scalar(255,255,255));
+        resize(image, image, Size(imageWidth, imageHeight));
+        
+        Rect imageRect = Rect(0, 0, imageWidth, imageHeight);
+        for (int i = 0; i < nrOfElements; ++i) {
+            image.copyTo(containerImage(imageRect));
+            imageRect.x += imageWidth;
+            if (imageRect.x + imageRect.width > exercisesRect.width) {
+                imageRect.x = 0.0;
+                imageRect.y += imageHeight;
             }
+            if (imageRect.y + imageRect.height> containerImage.rows) {
+                break;
+            }
+            //            if (imageRect.x  + imageRect.width > exercisesRect.width || imageRect.y  + imageRect.height> exercisesRect.height) {
+            //                cout<<"No more space available\n";
+            //                break;
+            //            }
         }
+        return containerImage;
+    } else {
+        
+        Mat containerImage = Mat(1, 1, CV_8UC3, Scalar(255,255,255));
+        return containerImage;
     }
-    
-    
-    
-    
-    
-    Point medianPoint = getMedianWristPoint(image.clone(), smallestDistance, rightHand);
-    medianPoint = smallestPoint;
-    Mat imageClone = image.clone();
-    circle(imageClone, rightHandDetectedCenterPoint, smallestDistance, Scalar(100,255,100), 1);
-    circle(imageClone, rightHandDetectedCenterPoint, 20, Scalar(100,255,100), 1);
-    
-    
-    Rect bottomWristRect = cvRect(0, medianPoint.y, image.cols, image.rows - medianPoint.y);
-    rightHandDetectedRect.height -= bottomWristRect.height;
-    Mat wholeImage = Mat(image.rows, image.cols, CV_8UC1, Scalar(255,255,255));
-    wholeImage(bottomWristRect) = 0.0;
-    
-    bitwise_and(wholeImage, image, image);
-    imshow("wholeImage3", image);
-    imshow("wristCircles", imageClone);
 }
 
-void startCamera(){
-    VideoCapture cap(0); // open the deafult camera (i.e. the built in web cam)
-    //    cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-    //    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
-    cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('M', 'J', 'P', 'G'));
-    //
-    //    cap.set(CAP_PROP_AUTOFOCUS, 0); // turn the autofocus off
-    //    cap.set(CAP_IEEE1394, CAP_PROP_DC1394_MODE_MANUAL);
-    //    cap.set(CAP_PROP_AUTO_EXPOSURE, 0);
+void drawOnScene(Mat image, int totalNumberOfFingers) {
+    int textRectHeight = 50;
+    int textYCenter = 2.0 * textRectHeight / 3.0;
     
-    if (!cap.isOpened()) { // openenig the video device failed
-        printf("Cannot open video capture device.\n");
-        return;
+    
+    rectangle(image, Point(0.0, 0.0), Point(image.cols, 10 + textRectHeight), whiteColor, -1);
+    string result = "Raspuns: " + to_string(totalNumberOfFingers);
+    putText(image,result,Point(image.cols / 2.0 - 100.0, textYCenter),1,resultTextSize, blackColor,1.5);
+    
+    double alpha = 0.3;
+    Mat overlay;
+    image.copyTo(overlay);
+    
+    rectangle(image, Point(rightHand->handROI.x, rightHand->handROI.y - textRectHeight), Point(rightHand->handROI.x + rightHand->handROI.width, rightHand->handROI.y), whiteColor, -1);
+    putText(image,to_string(rightHand->nrOfFingers),Point(rightHand->handROI.x + rightHand->handROI.width / 2.0, rightHand->handROI.y - textRectHeight + textYCenter),1, 2.0f,blackColor,2);
+    //    addWeighted(overlay, alpha, image, 1 - alpha, 0, image);
+    
+    rectangle(image, Point(leftHand->handROI.x, leftHand->handROI.y - textRectHeight), Point(leftHand->handROI.x + leftHand->handROI.width, leftHand->handROI.y), whiteColor, -1);
+    putText(image,to_string(leftHand->nrOfFingers),Point(leftHand->handROI.x + leftHand->handROI.width / 2.0, leftHand->handROI.y - textRectHeight + textYCenter),1, 2.0f,blackColor,2);
+    
+    
+    result = to_string((int)secondsLeftToDisplayHand);
+    string remainingSecondsString = " secunde ramase";
+    
+    rectangle(image, Point(0.0, image.rows - 2 * textRectHeight), Point(image.cols, image.rows), whiteColor, -1);
+    putText(image,result,Point(150, image.rows - textRectHeight),1,3.0f, blackColor,3);
+    putText(image,remainingSecondsString,Point(0.0, image.rows + textYCenter - textRectHeight),1,2.0f, blackColor,2);
+    addWeighted(overlay, alpha, image, 1 - alpha, 0, image);
+    
+    Sublevel *currentSublevel = currentPlayingLevel->sublevels[currentPlayingLevel->currentSublevelIndex];
+
+    if (currentPlayingLevel->levelImage.data != NULL) {
+        float wholeExerciseWidth = image.cols / 2.0;
+        float wholeExerciseHeight = 100.0;
+        float operandWidth = wholeExerciseWidth / (currentSublevel->operands.size() + currentSublevel->operators.size()) ;
+        Rect wholeExercisesRect = Rect(image.cols / 4.0, image.rows - wholeExerciseHeight, wholeExerciseWidth, wholeExerciseHeight);
+        
+        Rect operandRect = Rect(0, 0.0, operandWidth, wholeExerciseHeight);
+        Rect operatorRect = Rect(0, 0, operandWidth, wholeExerciseHeight);
+        float currentX = 0;
+        
+        Mat wholeExerciseBackgroundImage = loadMenuBackground();
+        resize(wholeExerciseBackgroundImage, wholeExerciseBackgroundImage, wholeExercisesRect.size());
+        
+        Rect exercisesRect = Rect(0, image.rows - textRectHeight + textYCenter, image.cols, 50);
+        
+        Mat appleImage = currentPlayingLevel->levelImage;
+        int nrOfOperands = currentSublevel->operands.size();
+
+        for (int i = 0;i < nrOfOperands; ++i) {
+            int operand = currentSublevel->operands[i];
+
+            Mat operandImage = addImagesToExercise(operandRect, operand, appleImage);
+            
+            resize(operandImage, operandImage, operandRect.size());
+            operandImage.copyTo(wholeExerciseBackgroundImage(operandRect));
+            
+            currentX += operandRect.width;
+            operatorRect.x = currentX;
+            if (i != nrOfOperands - 1){
+                string operatorString = currentSublevel->operators[i];
+                putText(wholeExerciseBackgroundImage(operatorRect), operatorString, Point(0.0, 100.0), FONT_HERSHEY_PLAIN, 10, Scalar(0,0,0), 6);
+            }
+            
+            currentX += operatorRect.width;
+            operandRect.x = currentX;
+        }
+       
+        wholeExerciseBackgroundImage.copyTo(image(wholeExercisesRect));
+        
+    } else {
+        
+        putText(image, currentPlayingLevel->sublevels[currentPlayingLevel->currentSublevelIndex]->sublevelExercise,Point(image.cols / 3.0, image.rows - textRectHeight + textYCenter),1,5.0f, blackColor,5);
+    }
+    if (!playedSoundOnce) {
+        playExercise(currentPlayingLevel->sublevels[currentPlayingLevel->currentSublevelIndex]->sublevelExercise);
+        playedSoundOnce = true;
     }
     
-    Mat frame;
     
-    // video resolution
+    if (answeredCorrectly) {
+        putText(image,"BRAVOOO",Point(0.0, 25.0),1,2.0, blackColor,1.5);
+    } else {
+        putText(image,"UPS",Point(0.0, 25.0),1,2.0, blackColor,1.5);
+    }
+    
+    
+    //Display found fingers text
+    
+    vector<Point> fingersPoints = rightHand->detectedFingersPositions;
+    for (int i = 0; i < fingersPoints.size(); ++i) {
+        Point currentFingerPoint = fingersPoints[i];
+        currentFingerPoint.x += rightHand->handROI.x;
+        currentFingerPoint.y += rightHand->handROI.y;
+        circle(image, currentFingerPoint, 5, redColor, -1);
+        //        putText(image,intToString(i),currentFingerPoint,1,2.0f, blackColor,2);
+    }
+    fingersPoints = leftHand->detectedFingersPositions;
+    for (int i = 0; i < fingersPoints.size(); ++i) {
+        Point currentFingerPoint = fingersPoints[i];
+        currentFingerPoint.x += leftHand->handROI.x;
+        currentFingerPoint.y += leftHand->handROI.y;
+        circle(image, currentFingerPoint, 5, redColor, -1);
+        
+        //        putText(image,intToString(i),currentFingerPoint,1,2.0f, blackColor,2);
+    }
+    int size = rightHand->handBiggestContour.size();
+    for (int i = 0; i < size; ++i) {
+        Point newPoint = rightHand->handBiggestContour[i];
+        newPoint.x += rightHand->handROI.x;
+        newPoint.y += rightHand->handROI.y;
+        rightHand->handBiggestContour[i] = newPoint;
+    }
+    
+    size = leftHand->handBiggestContour.size();
+    for (int i = 0; i < size; ++i) {
+        Point newPoint = leftHand->handBiggestContour[i];
+        newPoint.x += leftHand->handROI.x;
+        newPoint.y += leftHand->handROI.y;
+        leftHand->handBiggestContour[i] = newPoint;
+    }
+    
+    vector<vector<Point>> vector;
+    vector.push_back(rightHand->handBiggestContour);
+    drawContours(image, vector, 0, blueColor, 1);
+    
+    vector.clear();
+    vector.push_back(leftHand->handBiggestContour);
+    drawContours(image, vector, 0, blueColor, 1);
+    
+    
+    imshow(playingScreenName, image);
+    moveWindow(playingScreenName, 0, 0);
+}
+
+void manageResponse(Mat image, int totalNumberOfFingers) {
+    int sublevelCheckIndex = currentPlayingLevel->currentSublevelIndex - 1;
+    if (totalNumberOfFingers == currentPlayingLevel->sublevels[sublevelCheckIndex]->sublevelResponse) {
+        cout<<"ANSERWEWSDSADAS" << "\n\n\n";
+        answeredCorrectly = true;
+        currentPlayingLevel->score++;
+    } else {
+        answeredCorrectly = false;
+    }
+    drawOnScene(image, totalNumberOfFingers);
+}
+
+void validateResponse () {
+    
+}
+
+int newFrame(VideoCapture cap, Mat frame, int state, bool updateResult, int secondsLeft) {
+    secondsLeftToDisplayHand = secondsLeft;
     capS = Size((int)cap.get(CV_CAP_PROP_FRAME_WIDTH),
                 (int)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+    flip(frame, frame, 1);
+    rightHand->detectedFingersPositions.clear();
+    leftHand->detectedFingersPositions.clear();
+    //        test(frame.clone());
     
+    blur(frame, frame, Size(2, 2));
+    Mat flippedFrame = frame.clone();
+    originalImage = frame.clone();
+    drawROIS(frame);
+    extractImages(originalImage);
     
-    // Display window
-    //    const char* WIN_SRC = "Camera"; //window for the source frame
-    //    namedWindow(WIN_SRC, CV_WINDOW_AUTOSIZE);
-    //    moveWindow(WIN_SRC, 0, 0);
+    if (state == 1) {
+        Mat rectanglesImage = frame.clone();
+        placeSquares(rectanglesImage, true);
+        //        placeSquares(rectanglesImage, false);
+    }
     
-    //    const char* WIN_DST = "Snapped"; //window for showing the snapped frame
-    //    namedWindow(WIN_DST, CV_WINDOW_AUTOSIZE);
-    //    moveWindow(WIN_DST, capS.width + 10, 0);
-    
-    
-    char c;
-    int frameNum = -1;
-    int frameCount = 0;
-    state = 1;
-    
-    for (;;){
-        double fps = cap.get(CV_CAP_PROP_FPS);
-        cout<<"FPS: "<< fps<<"\n";
-        
-        cap >> frame; // get a new frame from cameras
-        if (frame.empty()) {
-            printf("End of the video file\n");
-            continue;
+    if (state == 2) {
+        computeMedianHandColor(flippedFrame, true);
+        //        computeMedianHandColor(flippedFrame, false);
+        currentSample++;
+        if (currentSample == NR_OF_SAMPLES) {
+            state = 3;
         }
-        flip(frame, frame, 1);
-        //
-        //        imshow("Original", frame);
-        //        blur(frame, frame, Size(3, 3));
-        //
-        //        Mat hue = Mat(frame.size(), CV_8U);
-        //
-        //        mixChannels(frame, hue, {0, 0});
-        //        equalizeHist(hue, hue);
-        //
-        //        Mat sat = Mat(frame.size(), CV_8U);
-        //        mixChannels(frame, sat, {1, 0});
-        //        equalizeHist(sat, sat);
-        //
-        //        Mat value = Mat(frame.size(), CV_8U);
-        //        mixChannels(frame, value, {2, 0});
-        //        equalizeHist(value, value);
-        //
-        //
-        //        vector<Mat> channels;
-        //        channels.push_back(hue);
-        //        channels.push_back(sat);
-        //        channels.push_back(value);
-        //
-        //        merge(channels, frame);
-        blur(frame, frame, Size(2, 2));
-        
-        //        imshow("OriginalBlured", frame);
-        originalImage = frame.clone();
-        //                test(frame.clone());
-        
-        //        frame = colorBalance(frame);
-        ++frameNum;
-        
-        //        c = waitKey(10);
-        
-        
-        //        createROI(frame);
-        drawROIS(frame);
-        extractImages(originalImage);
-        
-        
-        if (state == 1) {
-            placeSquares(frame.clone());
-        }
-        c = waitKey(10);
-        
-        
-        
-        if (c == 27) {
-            // press ESC to exit
-            printf("ESC pressed - capture finished");
-            waitKey();
-            //            break;  //ESC pressed
-        }
-        if (c == 115) {
-            state = 2;
-            frameCount++;
-        }
-        
-        
-        //
-        if (state == 2) {
-            computeMedianHandColor(frame);
-            if (currentSample == NR_OF_SAMPLES) {
-                state = 3;
-            }
-            currentSample++;
-        }
-        ////
-        if (state >= 3) {
-            //            solveHandDetection(roiFrame);
-            //            roiFrame = leftImage;
-            //            //pyrDown(roiFrame, roiFrame);
-            //
-            //            performBinarization();
-            //            imshow("LeftImageBinarised", roiFrame);
-            //            leftImageBinarized = roiFrame;
-            
-            
-            roiFrame = rightImage;
-            performBinarization();
-            imshow("rightImageBInarised", roiFrame);
-            rightImageBinarized = roiFrame;
-            
-            rightImageBinarized = filterImage(rightImageBinarized);
-            
-            findBiggestContourAndFillIt(rightImageBinarized, true);
-            
-            rightImageDT = computeDistanceTransform(rightImageFilledContours);
-            
-            findDTCenter(rightImageDT, true);
-            findCentroid(rightImageFilledContours, true);
-            removeWrist(rightImageFilledContours, true);
-            //            Mat rightImageDTCenter = rightImageFilledContours.clone();
-            //            circle(rightImageDTCenter, rightHandDetectedCenterPoint, 5, Scalar(100,255,100), 3);
-            //            imshow("rightImageDTCenter", rightImageDTCenter);
-            
-            //            Mat rightImageCentroid = rightImageFilledContours.clone();
-            //            circle(rightImageCentroid, rightHandCentroidPoint, 5, Scalar(100,255,100), 3);
-            //            imshow("rightImageCentroid", rightImageCentroid);
-            
-            createPalmCircle(rightImageFilledContours, true);
-            
-            
-            state = 4;
-        }
-        
-        if (state >= 4) {
-            //            roiFrame = leftImageBinarized;
-            //            computeHandImage();
-            //            imshow("LeftImageFinal", roiFrame);
-            
-            
-            
-            //            roiFrame = rightImageBinarized;
-            //            computeHandImage();
-            //            imshow("RightImageFinal", roiFrame);
-            //            state = 5;
-        }
-        
         
     }
+    
+    if (state >= 3) {
+        //            destroyWindow("Rectangle Image");
+        
+        roiFrame = rightHand->handImage;
+        rightHand->handImageBinarized = performBinarization(flippedFrame.clone(), true);
+        rightHand->handImageBinarized = filterImage(rightHand->handImageBinarized);
+        if (rightHand->handImageBinarized.data) {
+            findBiggestContourAndFillIt(rightHand->handImageBinarized, true);
+            rightHand->handImageDT = computeDistanceTransform(rightHand->handImageFilledContours);
+            if (rightHand->handImageDT.data) {
+                findDTCenter(rightHand->handImageDT, true);
+                if (rightHand->handImageFilledContours.data) {
+                    createPalmCircle(rightHand->handImageFilledContours, true);
+                } else {
+                    rightHand->nrOfFingers = 0;
+                    rightHand->detectedFingersPositions.clear();
+                }
+            } else {
+                rightHand->nrOfFingers = 0;
+                rightHand->detectedFingersPositions.clear();
+            }
+        }
+        
+        roiFrame = leftHand->handImage;
+        leftHand->handImageBinarized = performBinarization(flippedFrame.clone(), false);
+        leftHand->handImageBinarized = filterImage(leftHand->handImageBinarized);
+        if (leftHand->handImageBinarized.data) {
+            findBiggestContourAndFillIt(leftHand->handImageBinarized, false);
+            leftHand->handImageDT = computeDistanceTransform(leftHand->handImageBinarized);
+            findDTCenter(leftHand->handImageDT, false);
+            if (leftHand->handImageFilledContours.data) {
+                createPalmCircle(leftHand->handImageFilledContours, false);
+            } else {
+                leftHand->nrOfFingers = 0;
+                leftHand->detectedFingersPositions.clear();
+            }
+        }
+        int totalNrOfFingers = 0;
+        if (rightHand->nrOfFingers >= 0) {
+            //            if (rightHand->originalHandDetectedRect.width > 150 && rightHand->originalHandDetectedRect.height > 150) {
+            currentRightRectColor = greenColor;
+            totalNrOfFingers += rightHand->nrOfFingers;
+            if (secondsLeft < currentPlayingLevel->seconds / 2.0) {
+                rightHand->handReadNumbers[rightHand->nrOfFingers]++;
+            }
+            //            } else {
+            //                if (rightHand->originalHandDetectedRect.width < 80 || rightHand->originalHandDetectedRect.height < 70) {
+            //                    currentRightRectColor = redColor;
+            //                } else {
+            //                    currentRightRectColor = greenColor;
+            //                }
+            //                rightHand->nrOfFingers = 0;
+            //            }
+        } else {
+            currentRightRectColor = redColor;
+            rightHand->nrOfFingers = 0;
+        }
+        
+        if (leftHand->nrOfFingers >= 0) {
+            if (leftHand->originalHandDetectedRect.width > 150 && leftHand->originalHandDetectedRect.height > 150) {
+                currentLeftRectColor = greenColor;
+                totalNrOfFingers += leftHand->nrOfFingers;
+                if (secondsLeft < currentPlayingLevel->seconds / 2.0) {
+                    leftHand->handReadNumbers[leftHand->nrOfFingers]++;
+                }
+                
+            } else {
+                if (leftHand->originalHandDetectedRect.width < 80 || leftHand->originalHandDetectedRect.height < 70) {
+                    currentLeftRectColor = redColor;
+                } else {
+                    currentLeftRectColor = greenColor;
+                }
+                leftHand->nrOfFingers = 0;
+            }
+        } else {
+            currentLeftRectColor = redColor;
+            leftHand->nrOfFingers = 0;
+        }
+        
+        if (updateResult) {
+            resultTextSize = 3;
+            int rightFingerMaxIndex = 0;
+            for (int i = 0; i < 6; ++i) {
+                if (rightHand->handReadNumbers[i] >rightHand->handReadNumbers[rightFingerMaxIndex] && rightHand->handReadNumbers[i] > 10) {
+                    rightFingerMaxIndex = i;
+                }
+//                cout << "PROBRight: "<< i << ":  " << rightHand->handReadNumbers[i] <<"\n";
+            }
+            
+            cout << "\n";
+            
+            int leftFingerMaxIndex = 0;
+            
+            for (int i = 0; i < 6; ++i) {
+                if (leftHand->handReadNumbers[i] > leftHand->handReadNumbers[leftFingerMaxIndex] && leftHand->handReadNumbers[i] > 10) {
+                    leftFingerMaxIndex = i;
+                }
+//                cout << "PROBLeft: "<< i << ":  " << leftHand->handReadNumbers[i] <<"\n";
+            }
+            resetMedianCountFingers();
+
+            totalNrOfFingers = rightFingerMaxIndex + leftFingerMaxIndex;
+            
+            manageResponse(frame, totalNrOfFingers);
+            validateResponse();
+            
+            lastNrOfFingers = totalNrOfFingers;
+            playedSoundOnce = false;
+        } else {
+            if (resultTextSize > 2) {
+                resultTextSize-=0.1;
+            }
+            drawOnScene(frame, lastNrOfFingers);
+        }
+        
+        
+        state = 4;
+    }
+    
+    return state;
 }
 
+void updatePlayingLevel(Level *currentLevel) {
+    currentPlayingLevel = currentLevel;
+}
+
+void setupLevel(Level *level) {
+    playedSoundOnce = false;
+
+    rightHand = new Hand;
+    leftHand = new Hand;
+    
+    currentSample = 0;
+    currentRightRectColor = blueColor;
+    currentLeftRectColor = blueColor;
+    currentPlayingLevel = level;
+    resetMedianCountFingers();
+    answeredCorrectly = false;
+    currentPlayingLevel->score = 0;
+}
